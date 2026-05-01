@@ -37,36 +37,43 @@ pathway_engine: Optional[PathwayEngine] = None
 hospital_engine: Optional[HospitalEngine] = None
 cost_engine: Optional[CostEngine] = None
 
+def _get_engine() -> NLPEngine:
+    """Lazy-load NLP engine (works in both uvicorn and Vercel serverless)."""
+    global engine
+    if engine is None:
+        logger.info("Lazy-loading NLP engine (M1)...")
+        engine = NLPEngine()
+    return engine
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Load all three engines at startup."""
-    global engine, pathway_engine, hospital_engine, cost_engine
-    logger.info("Loading NLP engine (M1)...")
-    engine = NLPEngine()
-    logger.info("Loading Pathway engine (M2)...")
-    pathway_engine = PathwayEngine()
-    logger.info("Loading Hospital engine (M3)...")
-    hospital_engine = HospitalEngine()
-    logger.info("Loading Cost engine (M4)...")
-    cost_engine = CostEngine()
-    logger.info("All engines ready.")
-    yield
-    logger.info("Shutting down.")
-    engine = None
-    pathway_engine = None
-    hospital_engine = None
-    cost_engine = None
+def _get_pathway_engine() -> PathwayEngine:
+    global pathway_engine
+    if pathway_engine is None:
+        logger.info("Lazy-loading Pathway engine (M2)...")
+        pathway_engine = PathwayEngine()
+    return pathway_engine
+
+def _get_hospital_engine() -> HospitalEngine:
+    global hospital_engine
+    if hospital_engine is None:
+        logger.info("Lazy-loading Hospital engine (M3)...")
+        hospital_engine = HospitalEngine()
+    return hospital_engine
+
+def _get_cost_engine() -> CostEngine:
+    global cost_engine
+    if cost_engine is None:
+        logger.info("Lazy-loading Cost engine (M4)...")
+        cost_engine = CostEngine()
+    return cost_engine
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # FastAPI App
 # ─────────────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="ArogyaPath Backend — M1 + M2 + M3",
-    description="M1: NLP → Conditions | M2: Clinical Pathways | M3: Hospital Ranking",
+    title="ArogyaPath Backend — M1 + M2 + M3 + M4",
+    description="M1: NLP → Conditions | M2: Clinical Pathways | M3: Hospital Ranking | M4: Cost Estimation",
     version="3.0.0",
-    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -117,13 +124,14 @@ class AnalyzeResponse(BaseModel):
 
 @app.get("/health", tags=["System"])
 async def health_check():
-    """Liveness check — confirms both engines are loaded."""
+    """Liveness check — confirms engines are initialized."""
     return {
         "status": "ok",
-        "nlp_engine_loaded": engine is not None,
-        "pathway_engine_loaded": pathway_engine is not None,
-        "hospital_engine_loaded": hospital_engine is not None,
-        "service": "ArogyaPath M1+M2+M3",
+        "nlp_engine_initialized": engine is not None,
+        "pathway_engine_initialized": pathway_engine is not None,
+        "hospital_engine_initialized": hospital_engine is not None,
+        "cost_engine_initialized": cost_engine is not None,
+        "service": "ArogyaPath M1+M2+M3+M4",
         "version": "3.0.0",
     }
 
@@ -159,11 +167,9 @@ async def analyze_query(request: QueryRequest) -> AnalyzeResponse:
     }
     ```
     """
-    if engine is None:
-        raise HTTPException(status_code=503, detail="NLP engine not initialized.")
-
+    current_engine = _get_engine()
     try:
-        result = engine.process(request.query)
+        result = current_engine.process(request.query)
         return AnalyzeResponse(**result)
     except Exception as e:
         logger.error(f"Error processing query '{request.query}': {e}", exc_info=True)
@@ -177,10 +183,9 @@ async def analyze_query(request: QueryRequest) -> AnalyzeResponse:
 )
 async def list_conditions():
     """Returns the full list of conditions that M1 can map to."""
-    if engine is None:
-        raise HTTPException(status_code=503, detail="NLP engine not initialized.")
+    current_engine = _get_engine()
     return {
-        "total": len(engine.conditions),
+        "total": len(current_engine.conditions),
         "conditions": [
             {
                 "id": c["id"],
@@ -188,7 +193,7 @@ async def list_conditions():
                 "icd10": c["icd10"],
                 "pathway_id": c.get("pathway_id", ""),
             }
-            for c in engine.conditions
+            for c in current_engine.conditions
         ],
     }
 
@@ -221,24 +226,20 @@ async def get_pathway(request: PathwayRequest):
 
     Takes a `pathway_id` (from M1 `/analyze-query` output) and returns the
     full step-by-step treatment pathway DAG.
-
-    - `severity` = `"mild"` | `"moderate"` | `"severe"` → resolves the branch
-    - `severity` omitted → returns all branches for the UI to display
-
-    **Example:** `pathway_id="pathway_angina"`, `severity="moderate"`
-    → Returns: Consult → ECG → Echo → Stress Test → Angiography → Medical Management
     """
-    if pathway_engine is None:
-        raise HTTPException(status_code=503, detail="Pathway engine not initialized.")
+    current_pathway_engine = _get_pathway_engine()
     try:
-        result = pathway_engine.get_pathway(request.pathway_id, request.severity)
+        result = current_pathway_engine.get_pathway(
+            pathway_id=request.pathway_id,
+            severity=request.severity
+        )
         if "error" in result:
             raise HTTPException(status_code=404, detail=result["error"])
         return result
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Pathway error for '{request.pathway_id}': {e}", exc_info=True)
+        logger.error(f"Pathway engine error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -249,11 +250,10 @@ async def get_pathway(request: PathwayRequest):
 )
 async def list_pathways():
     """Returns summary of all pathways (id, condition, step count, has branches)."""
-    if pathway_engine is None:
-        raise HTTPException(status_code=503, detail="Pathway engine not initialized.")
+    current_pathway_engine = _get_pathway_engine()
     return {
-        "total": len(pathway_engine.pathways),
-        "pathways": pathway_engine.list_pathways(),
+        "total": len(current_pathway_engine.pathways),
+        "pathways": current_pathway_engine.list_pathways(),
     }
 
 
@@ -275,20 +275,19 @@ class HospitalRequest(BaseModel):
     summary="Get ranked hospitals for a condition and city",
 )
 async def get_hospitals(request: HospitalRequest):
-    if hospital_engine is None:
-        raise HTTPException(status_code=503, detail="Hospital engine not initialized.")
-    logger.info(f"[M3] /get-hospitals  pathway_id='{request.pathway_id}'  city='{request.city}'  filter_type='{request.filter_type}'  filter_nabh={request.filter_nabh}")
+    """
+    **M3: Hospital Discovery & Ranking.**
+    """
+    current_hospital_engine = _get_hospital_engine()
     try:
-        result = hospital_engine.get_hospitals(
+        result = current_hospital_engine.rank_hospitals(
             pathway_id=request.pathway_id,
             city=request.city,
             top_n=request.top_n,
-            filter_type=request.filter_type if request.filter_type else None,
-            filter_nabh=request.filter_nabh,
+            filter_type=request.filter_type,
+            filter_nabh=request.filter_nabh
         )
-        # Return gracefully even if no results found (let frontend show empty state)
-        if "error" in result and "available_cities" in result:
-            # City not recognised — this is a real 404
+        if "error" in result:
             raise HTTPException(status_code=404, detail=result["error"])
         return result
     except HTTPException:
@@ -301,9 +300,8 @@ async def get_hospitals(request: HospitalRequest):
 @app.get("/cities", tags=["Hospitals"], summary="List supported cities")
 async def list_cities():
     """Returns all cities currently in the hospital dataset."""
-    if hospital_engine is None:
-        raise HTTPException(status_code=503, detail="Hospital engine not initialized.")
-    return {"cities": hospital_engine.list_cities()}
+    current_hospital_engine = _get_hospital_engine()
+    return {"cities": current_hospital_engine.list_cities()}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -325,19 +323,10 @@ class CostRequest(BaseModel):
 async def estimate_cost(request: CostRequest):
     """
     **M4: Cost Estimation Engine.**
-
-    Takes a `pathway_id` (from M1), `city`, `hospital_type`, and `has_insurance`.
-    Returns a detailed cost breakdown:
-    - Per-component min/max ranges (consultation, diagnostics, procedure, stay, medicines)
-    - Total estimated range
-    - PM-JAY coverage and out-of-pocket cost
-
-    **Example:** `pathway_id="pathway_angina"`, `city="Bangalore"`, `hospital_type="private"`, `has_insurance=true`
     """
-    if cost_engine is None:
-        raise HTTPException(status_code=503, detail="Cost engine not initialized.")
+    current_cost_engine = _get_cost_engine()
     try:
-        result = cost_engine.estimate(
+        result = current_cost_engine.estimate(
             pathway_id=request.pathway_id,
             city=request.city,
             hospital_type=request.hospital_type,
@@ -356,6 +345,5 @@ async def estimate_cost(request: CostRequest):
 @app.get("/cost-pathways", tags=["Cost"], summary="List pathways with cost data")
 async def list_cost_pathways():
     """Returns all pathway IDs for which cost data is available."""
-    if cost_engine is None:
-        raise HTTPException(status_code=503, detail="Cost engine not initialized.")
-    return {"supported_pathways": cost_engine.list_supported_pathways()}
+    current_cost_engine = _get_cost_engine()
+    return {"supported_pathways": current_cost_engine.list_supported_pathways()}
