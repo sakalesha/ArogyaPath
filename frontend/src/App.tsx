@@ -177,9 +177,9 @@ interface AvailablePathway {
 }
 
 // --- API Configuration ---
-// For local development: backend runs on localhost:8001
-// Switch to ngrok URL only when using Google AI Studio to build new features
-const API_BASE = "http://localhost:8001";
+// Production: set VITE_API_BASE env variable in Vercel to your Render backend URL
+// Local dev: falls back to localhost:8001
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8001";
 const NGROK_HEADERS = {
   "ngrok-skip-browser-warning": "true",
   "Content-Type": "application/json"
