@@ -1,0 +1,7 @@
+[build]
+  base = "backend/nlp"
+  command = "pip install -r requirements.txt"
+  publish = "."
+
+[web]
+  command = "uvicorn main:app --host 0.0.0.0 --port $PORT"

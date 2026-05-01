@@ -1,0 +1,216 @@
+{
+  "_meta": { "version": "1.0", "phase": 1, "total_pathways": 10 },
+  "pathways": {
+    "pathway_angina": {
+      "condition": "Angina / Coronary Artery Disease",
+      "icd10": "I20",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Cardiologist Consultation", "type": "consultation", "mandatory": true, "description": "Initial cardiac assessment, symptom history, risk factor evaluation.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "ECG (Electrocardiogram)", "type": "diagnostic", "mandatory": true, "description": "Detects abnormal heart rhythms and ischemic changes.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "2D Echocardiogram", "type": "diagnostic", "mandatory": true, "description": "Assesses heart wall motion and ejection fraction.", "cost_tier": "medium" },
+        { "id": "s4", "order": 4, "name": "Stress Test (TMT)", "type": "diagnostic", "mandatory": false, "description": "Exercise stress test to detect ischemia under load.", "cost_tier": "medium" },
+        { "id": "s5", "order": 5, "name": "Coronary Angiography", "type": "diagnostic", "mandatory": true, "description": "Gold standard — visualises coronary artery blockages.", "cost_tier": "high" }
+      ],
+      "branch_point": {
+        "at_step": "s5",
+        "label": "Based on blockage severity:",
+        "branches": [
+          { "condition": "severe", "label": "Blockage >70%", "steps": [{ "id": "b1", "name": "Angioplasty + Stent (PCI)", "type": "procedure", "mandatory": true, "description": "Balloon angioplasty with stent placement to open blocked artery.", "cost_tier": "very_high" }] },
+          { "condition": "moderate", "label": "Blockage 40–70%", "steps": [{ "id": "b2", "name": "Medical Management", "type": "medication", "mandatory": true, "description": "Beta-blockers, statins, nitrates, aspirin. Lifestyle modification.", "cost_tier": "low" }] },
+          { "condition": "mild", "label": "Blockage <40%", "steps": [{ "id": "b3", "name": "Lifestyle Modification", "type": "lifestyle", "mandatory": true, "description": "Diet, exercise, smoking cessation, weight management.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_gerd": {
+      "condition": "GERD / Acid Reflux",
+      "icd10": "K21",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Gastroenterologist Consultation", "type": "consultation", "mandatory": true, "description": "Symptom history, dietary assessment, medication review.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "Upper GI Endoscopy", "type": "diagnostic", "mandatory": true, "description": "Direct visualization of esophagus, stomach, duodenum.", "cost_tier": "medium" },
+        { "id": "s3", "order": 3, "name": "H. pylori Test", "type": "diagnostic", "mandatory": false, "description": "Biopsy or breath test to detect H. pylori infection.", "cost_tier": "low" }
+      ],
+      "branch_point": {
+        "at_step": "s2",
+        "label": "Based on endoscopy findings:",
+        "branches": [
+          { "condition": "severe", "label": "Barrett's Esophagus / Stricture", "steps": [{ "id": "b1", "name": "Surveillance Endoscopy + Surgery Consult", "type": "procedure", "mandatory": true, "description": "3-monthly surveillance. Nissen fundoplication if refractory.", "cost_tier": "high" }] },
+          { "condition": "moderate", "label": "Erosive GERD", "steps": [{ "id": "b2", "name": "PPI Therapy (8 weeks) + Follow-up Endoscopy", "type": "medication", "mandatory": true, "description": "Omeprazole/Pantoprazole + follow-up in 8 weeks.", "cost_tier": "low" }] },
+          { "condition": "mild", "label": "Non-erosive Reflux", "steps": [{ "id": "b3", "name": "PPI Therapy + Lifestyle Changes", "type": "lifestyle", "mandatory": true, "description": "Antacids, head elevation, dietary modification, weight loss.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_tkr": {
+      "condition": "Total Knee Replacement",
+      "icd10": "Z96.65",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Orthopedic Consultation", "type": "consultation", "mandatory": true, "description": "Severity grading, functional assessment, BMI evaluation.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "X-Ray Knee (Weight-bearing)", "type": "diagnostic", "mandatory": true, "description": "Assesses joint space narrowing and alignment.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "MRI Knee", "type": "diagnostic", "mandatory": false, "description": "Evaluates cartilage, ligaments, meniscus damage.", "cost_tier": "medium" },
+        { "id": "s4", "order": 4, "name": "Pre-operative Fitness Evaluation", "type": "diagnostic", "mandatory": true, "description": "Blood tests, ECG, anaesthesia assessment.", "cost_tier": "medium" },
+        { "id": "s5", "order": 5, "name": "Pre-op Physiotherapy", "type": "therapy", "mandatory": false, "description": "Strengthens quadriceps to improve post-op outcomes.", "cost_tier": "low" }
+      ],
+      "branch_point": {
+        "at_step": "s2",
+        "label": "Based on arthritis grade:",
+        "branches": [
+          { "condition": "severe", "label": "Grade 3–4 Osteoarthritis", "steps": [
+            { "id": "b1", "name": "Total Knee Replacement Surgery", "type": "surgery", "mandatory": true, "description": "Resurfacing of femur, tibia, patella with metal/plastic implants. 3–5 day hospital stay.", "cost_tier": "very_high" },
+            { "id": "b2", "name": "Post-op Physiotherapy (6 weeks)", "type": "therapy", "mandatory": true, "description": "Mandatory rehabilitation for range of motion and strength.", "cost_tier": "medium" }
+          ]},
+          { "condition": "moderate", "label": "Grade 2 Osteoarthritis", "steps": [{ "id": "b3", "name": "Intra-articular Injection + Physiotherapy", "type": "procedure", "mandatory": true, "description": "Hyaluronic acid or steroid injection + physiotherapy program.", "cost_tier": "medium" }] },
+          { "condition": "mild", "label": "Early Arthritis", "steps": [{ "id": "b4", "name": "Conservative: Weight Loss + Physiotherapy + NSAIDs", "type": "lifestyle", "mandatory": true, "description": "Pain management and muscle strengthening.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_angioplasty": {
+      "condition": "Angioplasty / PCI",
+      "icd10": "Z95.5",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Interventional Cardiologist Consultation", "type": "consultation", "mandatory": true, "description": "Assessment of symptoms, risk factors, prior cardiac history.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "ECG + Cardiac Enzymes", "type": "diagnostic", "mandatory": true, "description": "Troponin, CK-MB to detect myocardial damage.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "2D Echocardiogram", "type": "diagnostic", "mandatory": true, "description": "Wall motion abnormality, EF assessment.", "cost_tier": "medium" },
+        { "id": "s4", "order": 4, "name": "Coronary Angiography (Diagnostic)", "type": "diagnostic", "mandatory": true, "description": "Catheter-based imaging of coronary arteries.", "cost_tier": "high" }
+      ],
+      "branch_point": {
+        "at_step": "s4",
+        "label": "Based on angiography findings:",
+        "branches": [
+          { "condition": "severe", "label": "Single/Multi-vessel Disease >70%", "steps": [
+            { "id": "b1", "name": "PCI + Drug-Eluting Stent", "type": "procedure", "mandatory": true, "description": "Balloon angioplasty with DES implant. Same sitting as angiography.", "cost_tier": "very_high" },
+            { "id": "b2", "name": "Dual Antiplatelet Therapy (12 months)", "type": "medication", "mandatory": true, "description": "Aspirin + Clopidogrel/Ticagrelor to prevent stent thrombosis.", "cost_tier": "low" }
+          ]},
+          { "condition": "moderate", "label": "Left Main / Complex Disease", "steps": [{ "id": "b3", "name": "CABG (Bypass Surgery) Referral", "type": "surgery", "mandatory": true, "description": "Referred to cardiac surgery for bypass grafting.", "cost_tier": "very_high" }] },
+          { "condition": "mild", "label": "Non-significant Disease", "steps": [{ "id": "b4", "name": "Optimal Medical Therapy", "type": "medication", "mandatory": true, "description": "Statins, beta-blockers, aspirin + risk factor modification.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_appendicitis": {
+      "condition": "Appendicitis",
+      "icd10": "K37",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Emergency Room Assessment", "type": "consultation", "mandatory": true, "description": "Clinical examination, Alvarado score, pain assessment.", "cost_tier": "medium" },
+        { "id": "s2", "order": 2, "name": "Blood Tests (WBC, CRP)", "type": "diagnostic", "mandatory": true, "description": "Elevated WBC and CRP indicate infection/inflammation.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "Ultrasound Abdomen", "type": "diagnostic", "mandatory": true, "description": "First-line imaging to visualise appendix.", "cost_tier": "low" },
+        { "id": "s4", "order": 4, "name": "CT Abdomen (if unclear)", "type": "diagnostic", "mandatory": false, "description": "Higher sensitivity/specificity when ultrasound is inconclusive.", "cost_tier": "medium" }
+      ],
+      "branch_point": {
+        "at_step": "s3",
+        "label": "Based on severity:",
+        "branches": [
+          { "condition": "severe", "label": "Perforated / Gangrenous", "steps": [{ "id": "b1", "name": "Emergency Open Appendectomy + IV Antibiotics", "type": "surgery", "mandatory": true, "description": "Open surgery for complex appendicitis. ICU possible. 5–7 day stay.", "cost_tier": "very_high" }] },
+          { "condition": "moderate", "label": "Acute Non-perforated", "steps": [{ "id": "b2", "name": "Laparoscopic Appendectomy", "type": "surgery", "mandatory": true, "description": "Keyhole surgery. 2–3 day hospital stay. Fast recovery.", "cost_tier": "high" }] },
+          { "condition": "mild", "label": "Uncomplicated / Early", "steps": [{ "id": "b3", "name": "IV Antibiotics Trial (Non-operative)", "type": "medication", "mandatory": true, "description": "Antibiotic-first approach. Surgery if no improvement in 48 hrs.", "cost_tier": "medium" }] }
+        ]
+      }
+    },
+
+    "pathway_gallstones": {
+      "condition": "Gallstones / Cholecystitis",
+      "icd10": "K80",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Surgeon / Gastroenterologist Consultation", "type": "consultation", "mandatory": true, "description": "Symptom history, dietary habits, risk factors (4 F's).", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "Ultrasound Abdomen", "type": "diagnostic", "mandatory": true, "description": "Gold standard for detecting gallstones.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "Liver Function Tests", "type": "diagnostic", "mandatory": true, "description": "Detects biliary obstruction (elevated bilirubin, ALP).", "cost_tier": "low" },
+        { "id": "s4", "order": 4, "name": "MRCP (if CBD stone suspected)", "type": "diagnostic", "mandatory": false, "description": "Non-invasive imaging of bile ducts.", "cost_tier": "medium" }
+      ],
+      "branch_point": {
+        "at_step": "s2",
+        "label": "Based on stone location and symptoms:",
+        "branches": [
+          { "condition": "severe", "label": "CBD Stones / Acute Cholangitis", "steps": [
+            { "id": "b1", "name": "ERCP + Stone Extraction", "type": "procedure", "mandatory": true, "description": "Endoscopic removal of common bile duct stones.", "cost_tier": "high" },
+            { "id": "b2", "name": "Laparoscopic Cholecystectomy (after ERCP)", "type": "surgery", "mandatory": true, "description": "Gallbladder removal after bile duct clearance.", "cost_tier": "high" }
+          ]},
+          { "condition": "moderate", "label": "Symptomatic Gallstones", "steps": [{ "id": "b3", "name": "Laparoscopic Cholecystectomy", "type": "surgery", "mandatory": true, "description": "Keyhole gallbladder removal. 1–2 day hospital stay.", "cost_tier": "high" }] },
+          { "condition": "mild", "label": "Asymptomatic Gallstones", "steps": [{ "id": "b4", "name": "Conservative Monitoring + Diet Modification", "type": "lifestyle", "mandatory": true, "description": "Low-fat diet. Surgery only if symptoms develop.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_diabetes": {
+      "condition": "Type 2 Diabetes",
+      "icd10": "E11",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Endocrinologist / Physician Consultation", "type": "consultation", "mandatory": true, "description": "Symptom history, family history, lifestyle assessment.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "HbA1c + Fasting Blood Glucose", "type": "diagnostic", "mandatory": true, "description": "HbA1c >6.5% confirms diabetes. Baseline glycaemic control.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "Renal / Liver / Lipid Panel", "type": "diagnostic", "mandatory": true, "description": "Kidney function, liver enzymes, lipid profile for complication screening.", "cost_tier": "low" },
+        { "id": "s4", "order": 4, "name": "Retinal Examination", "type": "diagnostic", "mandatory": true, "description": "Annual dilated fundus exam to screen for diabetic retinopathy.", "cost_tier": "low" },
+        { "id": "s5", "order": 5, "name": "Foot Examination + Neuropathy Screen", "type": "diagnostic", "mandatory": true, "description": "Monofilament test, pulses, ankle reflexes.", "cost_tier": "low" }
+      ],
+      "branch_point": {
+        "at_step": "s2",
+        "label": "Based on HbA1c level:",
+        "branches": [
+          { "condition": "severe", "label": "HbA1c >9% / With Complications", "steps": [{ "id": "b1", "name": "Insulin Therapy + Specialist Management", "type": "medication", "mandatory": true, "description": "Basal-bolus insulin regimen + specialist referrals for complications.", "cost_tier": "medium" }] },
+          { "condition": "moderate", "label": "HbA1c 7–9%", "steps": [{ "id": "b2", "name": "Oral Hypoglycaemics (Metformin + 2nd agent)", "type": "medication", "mandatory": true, "description": "Metformin + SGLT2 inhibitor or DPP-4 inhibitor. 3-monthly HbA1c.", "cost_tier": "low" }] },
+          { "condition": "mild", "label": "HbA1c 6.5–7% (Early / Pre-diabetes)", "steps": [{ "id": "b3", "name": "Lifestyle Intervention + Metformin", "type": "lifestyle", "mandatory": true, "description": "Diet control, weight loss, exercise. Metformin if lifestyle insufficient.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_hypertension": {
+      "condition": "Hypertension / High Blood Pressure",
+      "icd10": "I10",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Physician Consultation", "type": "consultation", "mandatory": true, "description": "Multiple BP readings, secondary cause assessment, risk stratification.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "BP Monitoring (3 readings on 2 occasions)", "type": "diagnostic", "mandatory": true, "description": "Confirms sustained hypertension vs white-coat hypertension.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "ECG + Kidney Function + Urine Albumin", "type": "diagnostic", "mandatory": true, "description": "Target organ damage screening.", "cost_tier": "low" },
+        { "id": "s4", "order": 4, "name": "Echocardiogram (if LVH suspected)", "type": "diagnostic", "mandatory": false, "description": "Assesses left ventricular hypertrophy.", "cost_tier": "medium" }
+      ],
+      "branch_point": {
+        "at_step": "s2",
+        "label": "Based on BP level and risk:",
+        "branches": [
+          { "condition": "severe", "label": "Stage 2 / Hypertensive Crisis (>180/110)", "steps": [{ "id": "b1", "name": "Hospitalisation + IV Antihypertensives", "type": "procedure", "mandatory": true, "description": "Emergency BP control. IV labetalol or nitroprusside.", "cost_tier": "very_high" }] },
+          { "condition": "moderate", "label": "Stage 2 (160–179 / 100–109)", "steps": [{ "id": "b2", "name": "Combination Antihypertensives (2 drugs)", "type": "medication", "mandatory": true, "description": "ACE inhibitor + CCB or ARB + thiazide. Monthly follow-up.", "cost_tier": "low" }] },
+          { "condition": "mild", "label": "Stage 1 (140–159 / 90–99)", "steps": [{ "id": "b3", "name": "Lifestyle + Single Antihypertensive", "type": "lifestyle", "mandatory": true, "description": "DASH diet, exercise, low salt + single drug if persistent.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_lower_back": {
+      "condition": "Lower Back Pain / Lumbar Disc Disease",
+      "icd10": "M54.5",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Orthopedic / Neurosurgeon Consultation", "type": "consultation", "mandatory": true, "description": "Neurological exam, red flag screening, pain duration assessment.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "X-Ray Lumbar Spine", "type": "diagnostic", "mandatory": true, "description": "Rules out fracture, spondylolisthesis, degeneration.", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "MRI Lumbar Spine", "type": "diagnostic", "mandatory": false, "description": "Required if neurological deficits, radiculopathy, or failed conservative care.", "cost_tier": "medium" },
+        { "id": "s4", "order": 4, "name": "Physiotherapy Trial (4–6 weeks)", "type": "therapy", "mandatory": true, "description": "Core strengthening, McKenzie exercises, hot/cold therapy.", "cost_tier": "low" }
+      ],
+      "branch_point": {
+        "at_step": "s4",
+        "label": "Based on response and neurological findings:",
+        "branches": [
+          { "condition": "severe", "label": "Cauda Equina / Foot Drop / Failed Conservative", "steps": [{ "id": "b1", "name": "Microdiscectomy / Laminectomy", "type": "surgery", "mandatory": true, "description": "Surgical decompression of nerve root. 2–3 day hospital stay.", "cost_tier": "very_high" }] },
+          { "condition": "moderate", "label": "Radiculopathy Not Responding", "steps": [{ "id": "b2", "name": "Epidural Steroid Injection", "type": "procedure", "mandatory": true, "description": "Fluoroscopy-guided injection for nerve root inflammation.", "cost_tier": "medium" }] },
+          { "condition": "mild", "label": "Mechanical Back Pain", "steps": [{ "id": "b3", "name": "Continued Physiotherapy + NSAIDs + Posture Correction", "type": "lifestyle", "mandatory": true, "description": "Extended physiotherapy, ergonomic advice, weight management.", "cost_tier": "low" }] }
+        ]
+      }
+    },
+
+    "pathway_cataract": {
+      "condition": "Cataract Surgery",
+      "icd10": "H26",
+      "steps": [
+        { "id": "s1", "order": 1, "name": "Ophthalmologist Consultation", "type": "consultation", "mandatory": true, "description": "Visual acuity, functional impact assessment, patient suitability.", "cost_tier": "low" },
+        { "id": "s2", "order": 2, "name": "Slit Lamp Examination", "type": "diagnostic", "mandatory": true, "description": "Grades cataract density (nuclear, cortical, posterior subcapsular).", "cost_tier": "low" },
+        { "id": "s3", "order": 3, "name": "A-Scan Biometry (IOL Power Calculation)", "type": "diagnostic", "mandatory": true, "description": "Calculates intraocular lens power before surgery.", "cost_tier": "low" },
+        { "id": "s4", "order": 4, "name": "Pre-operative Blood Tests + ECG", "type": "diagnostic", "mandatory": true, "description": "Fitness for local/general anaesthesia.", "cost_tier": "low" },
+        { "id": "s5", "order": 5, "name": "Phacoemulsification + IOL Implant", "type": "surgery", "mandatory": true, "description": "Ultrasound lens removal + IOL insertion. Day-care procedure. 30 min.", "cost_tier": "high" }
+      ],
+      "branch_point": {
+        "at_step": "s5",
+        "label": "Based on IOL type choice:",
+        "branches": [
+          { "condition": "severe", "label": "Dense / Mature Cataract", "steps": [{ "id": "b1", "name": "ECCE (Manual Large-Incision) + Monofocal IOL", "type": "surgery", "mandatory": true, "description": "Manual extraction for very dense cataracts. Longer recovery.", "cost_tier": "medium" }] },
+          { "condition": "moderate", "label": "Standard Cataract", "steps": [{ "id": "b2", "name": "Phaco + Monofocal IOL + Post-op Eye Drops (4 weeks)", "type": "procedure", "mandatory": true, "description": "Standard of care. Antibiotic + steroid drops for 4 weeks.", "cost_tier": "high" }] },
+          { "condition": "mild", "label": "Early Cataract + Presbyopia", "steps": [{ "id": "b3", "name": "Phaco + Premium Multifocal / Toric IOL", "type": "procedure", "mandatory": true, "description": "Advanced IOL for spectacle independence. Higher cost.", "cost_tier": "very_high" }] }
+        ]
+      }
+    }
+  }
+}

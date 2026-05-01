@@ -1,0 +1,218 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "phase": 1,
+    "total_conditions": 10,
+    "description": "Controlled ontology for ArogyaPath M1 NLP → Condition Mapping. Phase 1 covers the 10 highest-priority conditions for Indian healthcare cost estimation.",
+    "scoring_note": "confidence = (matched_keywords / total_keywords) * weight, normalized across all conditions"
+  },
+  "conditions": [
+    {
+      "id": "angina_cad",
+      "name": "Angina / Coronary Artery Disease",
+      "icd10": "I20",
+      "snomed": "194828000",
+      "pathway_id": "pathway_angina",
+      "weight": 1.0,
+      "symptom_keywords": [
+        "chest pain", "chest tightness", "chest pressure", "chest discomfort",
+        "exertion pain", "pain on walking", "pain on exercise", "cold weather pain",
+        "shortness of breath", "breathlessness", "radiating arm pain", "left arm pain",
+        "jaw pain", "neck pain", "palpitations", "angina", "heart pain",
+        "squeezing chest", "heavy chest"
+      ],
+      "procedure_keywords": [
+        "angioplasty", "pci", "bypass surgery", "cabg", "stent", "ecg",
+        "echocardiogram", "echo", "stress test", "angiography", "cath lab"
+      ],
+      "exclusion_keywords": ["heartburn", "acid", "after eating"],
+      "severity_keywords": ["severe", "crushing", "sudden", "radiating"]
+    },
+    {
+      "id": "gerd",
+      "name": "GERD / Acid Reflux",
+      "icd10": "K21",
+      "snomed": "235595009",
+      "pathway_id": "pathway_gerd",
+      "weight": 0.8,
+      "symptom_keywords": [
+        "heartburn", "acid reflux", "regurgitation", "sour taste", "burning throat",
+        "burning chest", "after eating", "after meals", "lying down", "night pain",
+        "indigestion", "bloating", "belching", "nausea", "vomiting",
+        "difficulty swallowing", "sore throat", "cough at night"
+      ],
+      "procedure_keywords": [
+        "endoscopy", "upper gi", "ppi", "omeprazole", "pantoprazole"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["chronic", "persistent", "frequent"]
+    },
+    {
+      "id": "tkr",
+      "name": "Total Knee Replacement",
+      "icd10": "Z96.65",
+      "snomed": "179344006",
+      "pathway_id": "pathway_tkr",
+      "weight": 1.0,
+      "symptom_keywords": [
+        "knee pain", "knee replacement", "knee surgery", "knee stiffness",
+        "knee swelling", "cannot walk", "difficulty walking", "limping",
+        "joint pain knee", "knee arthritis", "osteoarthritis knee",
+        "bent knee", "locking knee", "knee clicking", "knee giving way"
+      ],
+      "procedure_keywords": [
+        "knee replacement", "tkr", "total knee", "knee implant",
+        "knee prosthesis", "knee arthroplasty", "physiotherapy"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["severe", "bone on bone", "grade 4"]
+    },
+    {
+      "id": "angioplasty_pci",
+      "name": "Angioplasty / PCI",
+      "icd10": "Z95.5",
+      "snomed": "11101003",
+      "pathway_id": "pathway_angioplasty",
+      "weight": 1.0,
+      "symptom_keywords": [
+        "angioplasty", "stent", "blocked artery", "coronary blockage",
+        "heart blockage", "coronary artery disease",
+        "heart attack history", "cath"
+      ],
+      "procedure_keywords": [
+        "angioplasty", "pci", "balloon angioplasty", "stent placement",
+        "angiography", "catheterization", "cath lab", "interventional cardiology"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["90 percent", "critical", "emergency", "acute"]
+    },
+    {
+      "id": "appendicitis",
+      "name": "Appendicitis",
+      "icd10": "K37",
+      "snomed": "74400008",
+      "pathway_id": "pathway_appendicitis",
+      "weight": 0.9,
+      "symptom_keywords": [
+        "appendix pain", "right side stomach pain", "lower right pain",
+        "stomach pain fever", "nausea vomiting fever", "appendicitis",
+        "belly button pain", "pain moving to right", "rebound tenderness",
+        "loss of appetite", "cannot eat", "vomiting pain"
+      ],
+      "procedure_keywords": [
+        "appendectomy", "appendix removal", "laparoscopic appendectomy",
+        "open appendectomy", "ultrasound abdomen"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["severe", "sudden onset", "high fever", "emergency"]
+    },
+    {
+      "id": "gallstones",
+      "name": "Gallstones / Cholecystitis",
+      "icd10": "K80",
+      "snomed": "235919008",
+      "pathway_id": "pathway_gallstones",
+      "weight": 0.9,
+      "symptom_keywords": [
+        "gallstone", "gallbladder pain", "upper right pain", "right side pain",
+        "pain after fatty food", "oily food pain", "nausea after eating",
+        "yellow eyes", "jaundice", "bile duct", "biliary colic",
+        "vomiting after meals", "bloating fat food"
+      ],
+      "procedure_keywords": [
+        "cholecystectomy", "gallbladder removal", "laparoscopic surgery",
+        "ercp", "ultrasound abdomen", "liver function test"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["acute", "severe", "fever with pain"]
+    },
+    {
+      "id": "type2_diabetes",
+      "name": "Type 2 Diabetes",
+      "icd10": "E11",
+      "snomed": "44054006",
+      "pathway_id": "pathway_diabetes",
+      "weight": 0.85,
+      "symptom_keywords": [
+        "diabetes", "high blood sugar", "sugar level high", "diabetic",
+        "frequent urination", "excessive thirst", "weight loss unexplained",
+        "blurry vision", "slow healing", "tingling feet", "numbness feet",
+        "fatigue weakness", "frequent infections", "sugar patient"
+      ],
+      "procedure_keywords": [
+        "hba1c", "fasting glucose", "blood sugar test", "insulin",
+        "metformin", "diabetes management", "endocrinologist"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["uncontrolled", "insulin dependent", "complications"]
+    },
+    {
+      "id": "hypertension",
+      "name": "Hypertension / High Blood Pressure",
+      "icd10": "I10",
+      "snomed": "38341003",
+      "pathway_id": "pathway_hypertension",
+      "weight": 0.85,
+      "symptom_keywords": [
+        "high blood pressure", "hypertension", "bp high", "blood pressure",
+        "headache morning", "dizziness", "blurred vision headache",
+        "nosebleed", "shortness of breath exertion", "bp medication",
+        "pounding headache", "neck pain headache", "heart racing"
+      ],
+      "procedure_keywords": [
+        "bp monitoring", "ecg", "kidney function test", "urine test",
+        "amlodipine", "telmisartan", "antihypertensive"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["uncontrolled", "stage 2", "hypertensive crisis", "very high bp"]
+    },
+    {
+      "id": "lower_back_pain",
+      "name": "Lower Back Pain / Lumbar Disc Disease",
+      "icd10": "M54.5",
+      "snomed": "279039007",
+      "pathway_id": "pathway_lower_back",
+      "weight": 0.8,
+      "symptom_keywords": [
+        "back pain", "lower back pain", "lumbar pain", "spine pain",
+        "disc problem", "herniated disc", "slipped disc", "sciatica",
+        "leg pain from back", "radiating leg pain", "cannot bend",
+        "stiffness morning back", "nerve pain leg", "lumbago"
+      ],
+      "procedure_keywords": [
+        "mri spine", "physiotherapy", "discectomy", "laminectomy",
+        "spinal injection", "pain management", "orthopedic"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["severe", "cannot walk", "foot drop", "chronic"]
+    },
+    {
+      "id": "cataract",
+      "name": "Cataract Surgery",
+      "icd10": "H26",
+      "snomed": "193570009",
+      "pathway_id": "pathway_cataract",
+      "weight": 0.85,
+      "symptom_keywords": [
+        "cataract", "blurry vision", "cloudy vision", "eye lens",
+        "difficulty seeing", "cannot read", "night vision poor",
+        "glare sensitivity", "double vision", "faded colors",
+        "eye surgery", "lens replacement", "vision loss gradual"
+      ],
+      "procedure_keywords": [
+        "phacoemulsification", "iol implant", "intraocular lens",
+        "cataract surgery", "ophthalmologist", "eye drops",
+        "slit lamp", "visual acuity test"
+      ],
+      "exclusion_keywords": [],
+      "severity_keywords": ["mature cataract", "dense", "cannot drive"]
+    }
+  ],
+  "emergency_keywords": [
+    "heart attack", "cardiac arrest", "stroke", "unconscious", "not breathing",
+    "cannot breathe", "stopped breathing", "collapsing", "fainting", "paralysis",
+    "face drooping", "arm weakness sudden", "speech slurred",
+    "crushing chest pain", "blood in stool heavy", "coughing blood", "seizure",
+    "convulsion", "anaphylaxis", "allergic reaction severe", "poisoning"
+  ]
+}

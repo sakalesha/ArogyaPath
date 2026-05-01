@@ -1,0 +1,122 @@
+# ArogyaPath — Project Struggles & Honest Difficulties
+
+## 1. Python 3.13 Incompatibility — The Biggest Blocker
+
+**What happened:**
+The very first attempt to install the NLP libraries (`spacy`, `scispacy`, `medspacy`) completely failed. The pip install ran for over 10 minutes trying to compile C++ code from scratch, then threw this error:
+
+```
+Failed to build blis
+ERROR: Failed to build 'spacy'
+```
+
+**Why it happened:**
+The machine has Python 3.13 installed, which is too new. These biomedical NLP libraries officially support only up to Python 3.11. When pre-built binaries don't exist for Python 3.13, pip tries to compile from source — and the compilation fails.
+
+**Impact:**
+- 10+ minutes of wasted install time
+- The carefully planned SciSpaCy + medSpaCy NLP pipeline could not be used at all
+- Had to fall back to pure Python keyword matching, which is significantly less accurate than a proper NER model
+
+**What was lost:**
+- True biomedical entity recognition (SciSpaCy)
+- Proper negation detection that understands context (medSpaCy ConText algorithm)
+- Spell-checking for user typos (pyspellchecker)
+
+**What we did instead:**
+Rewrote the NLP engine with a pure Python sliding-window negation algorithm and keyword indexing. It works but it is a simplification of what was originally planned.
+
+---
+
+## 2. Wasted Effort — Duplicate Folder Structure
+
+**What happened:**
+At the start, a separate `nlp_engine/` folder was created and code was started there (requirements.txt, app/main.py, app/services/nlp_service.py). Several hours later, it was discovered that a fully working backend already existed inside `backend/nlp/` with M1, M2, and M3 already implemented, with complete JSON data files and unit tests.
+
+**Why it happened:**
+The project folder was not fully explored before starting to write code. The assumption was that because only 3 files were visible at the root level, no backend code existed yet.
+
+**Impact:**
+- Time spent creating the `nlp_engine/` folder and early code was completely wasted
+- Two separate server structures existed for a while causing confusion
+- The `nlp_engine/` folder still sits in the project unused
+
+---
+
+## 3. Architecture Confusion — Multiple Direction Changes
+
+**What happened:**
+Before any code was written, there were multiple rounds of back-and-forth discussions about fundamental architecture decisions:
+- Should we use LLMs or not? (Changed from yes → no)
+- Should the frontend use Function Calling or raw API calls? (The user did not know what Function Calling was)
+- Should SpaCy be used or not? (Changed from yes → no, due to Python version)
+- Which folder should the backend live in? (`nlp_engine/` vs `backend/nlp/`)
+
+**Why it happened:**
+The team was figuring things out in real-time during the hackathon. There was no pre-agreed technical design document that was locked before building.
+
+**Impact:**
+- A significant portion of time was spent in planning and discussion rather than coding
+- Multiple approaches were partially started before being abandoned
+
+---
+
+## 4. No Unit Tests for M4
+
+**What happened:**
+When M1, M2, and M3 were discovered in `backend/nlp/`, they each had proper unit test files (`test_nlp.py`, `test_pathway.py`, `test_hospital.py`) with 15–20 test cases each covering edge cases, negation, emergency detection, and schema validation.
+
+M4 (Cost Estimation Engine) was built from scratch without any unit test file. Testing was done only manually via the FastAPI `/docs` UI.
+
+**Why it happened:**
+M4 was built quickly under time pressure. Writing test cases was deprioritized.
+
+**Impact:**
+- If the cost calculation logic has bugs (e.g., wrong multiplier applied), they may only be discovered when the frontend team hits a wrong number
+- Less confidence in the correctness of PM-JAY out-of-pocket calculations
+
+---
+
+## 5. ngrok URL Changes Every Session
+
+**What happened:**
+Every time ngrok is restarted (e.g., after a system restart or network change), the public URL changes. For example:
+- Session 1: `https://transfer-parka-rental.ngrok-free.dev`
+- Session 2: Will be a completely different URL
+
+**Why it happened:**
+The free tier of ngrok does not support static/reserved domains.
+
+**Impact:**
+- Every time the ngrok session is restarted, the frontend developer needs to update the URL in Google AI Studio
+- This is a fragile setup for a hackathon demo where stability matters
+
+**Workaround not yet implemented:**
+A paid ngrok account provides a static domain. Alternatively, deploying the backend to a free cloud platform (Render, Railway) would give a permanent URL.
+
+---
+
+## 6. Frontend Not Fully Integrated Yet
+
+**What happened:**
+As of now, the frontend (built via Google AI Studio) has views for M1, M2, M3, and VIEW 5 (M4 cost estimation) is being built via prompt engineering. The frontend and backend have not been tested together end-to-end in a single complete user flow.
+
+**Why it happened:**
+The frontend and backend are being developed in parallel by different "agents" (Google AI Studio for frontend, this session for backend). Integration testing has not been done yet.
+
+**Impact:**
+- The API response schemas between what the backend returns and what the frontend expects may have mismatches
+- Unknown bugs may surface only during live demo
+
+---
+
+## Summary
+
+| Struggle | Severity | Resolved? |
+|---|---|---|
+| Python 3.13 SpaCy failure | High | Partially (pure Python fallback) |
+| Duplicate folder / wasted effort | Medium | No (nlp_engine/ still unused) |
+| Architecture confusion | Medium | Yes (decisions locked) |
+| No M4 unit tests | Medium | No |
+| ngrok URL instability | Low | No (workaround: keep session open) |
+| Frontend not end-to-end tested | High | No (ongoing) |

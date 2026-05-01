@@ -1,0 +1,171 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "Cost data for ArogyaPath M4. All costs in INR. Base costs are CGHS/NHP reference rates for Tier-1 cities, government hospitals.",
+    "sources": ["CGHS 2024 rate list", "NHP Hospital Cost Data", "NABH Hospital Survey 2023"],
+    "disclaimer": "Ranges are indicative only. Actual costs may vary."
+  },
+  "city_tier_multipliers": {
+    "tier1": { "cities": ["Mumbai", "Delhi", "Bangalore", "Chennai", "Hyderabad", "Kolkata"], "multiplier": 1.5 },
+    "tier2": { "cities": ["Pune", "Ahmedabad", "Jaipur", "Lucknow", "Chandigarh", "Kochi"], "multiplier": 1.2 },
+    "tier3": { "cities": ["Mysore", "Coimbatore", "Bhubaneswar", "Indore", "Nagpur"], "multiplier": 1.0 }
+  },
+  "hospital_type_multipliers": {
+    "government": 1.0,
+    "trust": 1.3,
+    "private": 1.8,
+    "corporate": 2.5
+  },
+  "conditions": {
+    "pathway_angina": {
+      "condition_name": "Angina / Coronary Artery Disease",
+      "icd10": "I20",
+      "cost_components": {
+        "consultation": { "min": 500, "max": 2000, "label": "Cardiologist Consultation" },
+        "diagnostics": { "min": 3000, "max": 12000, "label": "ECG, Echo, Stress Test, Blood Work" },
+        "procedure": { "min": 80000, "max": 250000, "label": "Angioplasty / Bypass Surgery (if needed)" },
+        "stay": { "min": 10000, "max": 30000, "label": "Hospital Stay (3–7 days)" },
+        "medicines": { "min": 2000, "max": 8000, "label": "Medicines (30-day supply)" },
+        "contingency": { "min": 5000, "max": 20000, "label": "Contingency / Misc" }
+      },
+      "pmjay_covered": true,
+      "pmjay_limit": 500000,
+      "notes": "Cost varies heavily based on whether angioplasty (stent) or bypass surgery (CABG) is needed."
+    },
+    "pathway_gerd": {
+      "condition_name": "GERD / Acid Reflux",
+      "icd10": "K21",
+      "cost_components": {
+        "consultation": { "min": 300, "max": 1500, "label": "Gastroenterologist Consultation" },
+        "diagnostics": { "min": 2000, "max": 8000, "label": "Endoscopy, H.Pylori Test" },
+        "procedure": { "min": 0, "max": 5000, "label": "Endoscopic procedure (if required)" },
+        "stay": { "min": 0, "max": 5000, "label": "Day-care or overnight (usually OPD)" },
+        "medicines": { "min": 500, "max": 2000, "label": "PPIs, Antacids (30-day supply)" },
+        "contingency": { "min": 500, "max": 2000, "label": "Contingency / Misc" }
+      },
+      "pmjay_covered": false,
+      "pmjay_limit": 0,
+      "notes": "Usually managed with lifestyle changes and PPIs. Endoscopy needed for severe/chronic cases."
+    },
+    "pathway_tkr": {
+      "condition_name": "Total Knee Replacement",
+      "icd10": "Z96.65",
+      "cost_components": {
+        "consultation": { "min": 500, "max": 2000, "label": "Orthopedic Surgeon Consultation" },
+        "diagnostics": { "min": 3000, "max": 8000, "label": "X-Ray, MRI Knee, Blood Work" },
+        "procedure": { "min": 120000, "max": 350000, "label": "TKR Surgery (implant + surgeon fees)" },
+        "stay": { "min": 15000, "max": 40000, "label": "Hospital Stay (5–7 days)" },
+        "medicines": { "min": 3000, "max": 10000, "label": "Post-op medicines + pain management" },
+        "contingency": { "min": 10000, "max": 30000, "label": "Physiotherapy + Contingency" }
+      },
+      "pmjay_covered": true,
+      "pmjay_limit": 300000,
+      "notes": "Implant brand (Indian vs Imported) significantly affects cost. Physiotherapy is mandatory post-surgery."
+    },
+    "pathway_angioplasty": {
+      "condition_name": "Angioplasty / PCI",
+      "icd10": "Z95.5",
+      "cost_components": {
+        "consultation": { "min": 500, "max": 2000, "label": "Interventional Cardiologist Consultation" },
+        "diagnostics": { "min": 5000, "max": 15000, "label": "Angiography, Blood Work, ECG" },
+        "procedure": { "min": 80000, "max": 200000, "label": "Angioplasty + Stent (drug-eluting vs bare metal)" },
+        "stay": { "min": 10000, "max": 25000, "label": "Hospital Stay (2–4 days)" },
+        "medicines": { "min": 3000, "max": 10000, "label": "Dual antiplatelet therapy (30-day)" },
+        "contingency": { "min": 5000, "max": 15000, "label": "Contingency / Misc" }
+      },
+      "pmjay_covered": true,
+      "pmjay_limit": 400000,
+      "notes": "Drug-eluting stents are preferred but cost more. Bare-metal stents are cheaper."
+    },
+    "pathway_appendicitis": {
+      "condition_name": "Appendicitis",
+      "icd10": "K37",
+      "cost_components": {
+        "consultation": { "min": 500, "max": 1500, "label": "General Surgeon Consultation" },
+        "diagnostics": { "min": 2000, "max": 6000, "label": "Ultrasound, CT Scan, Blood Work" },
+        "procedure": { "min": 25000, "max": 80000, "label": "Laparoscopic Appendectomy" },
+        "stay": { "min": 8000, "max": 20000, "label": "Hospital Stay (2–4 days)" },
+        "medicines": { "min": 1500, "max": 4000, "label": "Antibiotics + Pain management" },
+        "contingency": { "min": 2000, "max": 8000, "label": "Contingency / Misc" }
+      },
+      "pmjay_covered": true,
+      "pmjay_limit": 150000,
+      "notes": "Emergency surgery. Laparoscopic is preferred. Open surgery may cost less but longer recovery."
+    },
+    "pathway_gallstones": {
+      "condition_name": "Gallstones / Cholecystitis",
+      "icd10": "K80",
+      "cost_components": {
+        "consultation": { "min": 500, "max": 1500, "label": "Gastroenterologist / Surgeon Consultation" },
+        "diagnostics": { "min": 2000, "max": 7000, "label": "Ultrasound Abdomen, LFT, Blood Work" },
+        "procedure": { "min": 30000, "max": 90000, "label": "Laparoscopic Cholecystectomy" },
+        "stay": { "min": 8000, "max": 20000, "label": "Hospital Stay (2–4 days)" },
+        "medicines": { "min": 1000, "max": 3000, "label": "Antibiotics + Analgesics" },
+        "contingency": { "min": 2000, "max": 8000, "label": "Contingency / Misc" }
+      },
+      "pmjay_covered": true,
+      "pmjay_limit": 150000,
+      "notes": "Elective surgery usually. Acute cholecystitis may require emergency admission."
+    },
+    "pathway_diabetes": {
+      "condition_name": "Type 2 Diabetes",
+      "icd10": "E11",
+      "cost_components": {
+        "consultation": { "min": 300, "max": 1500, "label": "Endocrinologist / Diabetologist Consultation" },
+        "diagnostics": { "min": 1000, "max": 4000, "label": "HbA1c, Fasting Glucose, Lipid Panel, Urine" },
+        "procedure": { "min": 0, "max": 0, "label": "No surgical procedure for routine management" },
+        "stay": { "min": 0, "max": 10000, "label": "Hospitalization (only if uncontrolled)" },
+        "medicines": { "min": 500, "max": 3000, "label": "Metformin / Insulin (monthly)" },
+        "contingency": { "min": 500, "max": 2000, "label": "Glucometer, strips, misc" }
+      },
+      "pmjay_covered": false,
+      "pmjay_limit": 0,
+      "notes": "Chronic condition managed via OPD. Annual tests + regular medication. Complications (nephropathy, neuropathy) may increase costs significantly."
+    },
+    "pathway_hypertension": {
+      "condition_name": "Hypertension / High Blood Pressure",
+      "icd10": "I10",
+      "cost_components": {
+        "consultation": { "min": 300, "max": 1500, "label": "General Physician / Cardiologist" },
+        "diagnostics": { "min": 500, "max": 3000, "label": "ECG, Kidney Function, Urine Test" },
+        "procedure": { "min": 0, "max": 0, "label": "No surgical procedure for routine management" },
+        "stay": { "min": 0, "max": 15000, "label": "Hospitalization (only in hypertensive crisis)" },
+        "medicines": { "min": 300, "max": 1500, "label": "Antihypertensives (monthly)" },
+        "contingency": { "min": 500, "max": 1500, "label": "BP Monitor purchase, misc" }
+      },
+      "pmjay_covered": false,
+      "pmjay_limit": 0,
+      "notes": "Managed via lifestyle and medication. Chronic condition. Uncontrolled hypertension can lead to stroke / kidney failure."
+    },
+    "pathway_lower_back": {
+      "condition_name": "Lower Back Pain / Lumbar Disc Disease",
+      "icd10": "M54.5",
+      "cost_components": {
+        "consultation": { "min": 500, "max": 2000, "label": "Orthopedic / Spine Surgeon" },
+        "diagnostics": { "min": 3000, "max": 10000, "label": "MRI Spine, X-Ray" },
+        "procedure": { "min": 0, "max": 150000, "label": "Discectomy / Spinal Injection (if needed)" },
+        "stay": { "min": 0, "max": 20000, "label": "Hospital Stay (only if surgery)" },
+        "medicines": { "min": 1000, "max": 4000, "label": "Pain medication + muscle relaxants" },
+        "contingency": { "min": 3000, "max": 15000, "label": "Physiotherapy (10–20 sessions)" }
+      },
+      "pmjay_covered": true,
+      "pmjay_limit": 200000,
+      "notes": "Most cases resolve with physiotherapy. Surgery only for disc herniation with nerve compression."
+    },
+    "pathway_cataract": {
+      "condition_name": "Cataract Surgery",
+      "icd10": "H26",
+      "cost_components": {
+        "consultation": { "min": 300, "max": 1000, "label": "Ophthalmologist Consultation" },
+        "diagnostics": { "min": 500, "max": 2000, "label": "Visual Acuity, Slit Lamp, IOL Power Calc" },
+        "procedure": { "min": 15000, "max": 80000, "label": "Phacoemulsification + IOL Implant" },
+        "stay": { "min": 0, "max": 5000, "label": "Day-care procedure, usually no stay" },
+        "medicines": { "min": 500, "max": 2000, "label": "Eye drops (4–6 weeks post-op)" },
+        "contingency": { "min": 500, "max": 2000, "label": "Contingency / Misc" }
+      },
+      "pmjay_covered": true,
+      "pmjay_limit": 40000,
+      "notes": "IOL type (monofocal vs multifocal vs toric) significantly affects cost. Usually day-care, no overnight stay."
+    }
+  }
+}
