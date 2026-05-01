@@ -177,9 +177,8 @@ interface AvailablePathway {
 }
 
 // --- API Configuration ---
-// Production: set VITE_API_BASE env variable in Vercel to your Render backend URL
-// Local dev: falls back to localhost:8001
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8001";
+// Unified Deployment: Backend is served under /api on the same domain
+const API_BASE = "/api";
 const NGROK_HEADERS = {
   "ngrok-skip-browser-warning": "true",
   "Content-Type": "application/json"

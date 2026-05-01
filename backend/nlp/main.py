@@ -8,6 +8,7 @@ Run: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -74,6 +75,7 @@ app = FastAPI(
     title="ArogyaPath Backend — M1 + M2 + M3 + M4",
     description="M1: NLP → Conditions | M2: Clinical Pathways | M3: Hospital Ranking | M4: Cost Estimation",
     version="3.0.0",
+    root_path="/api" if os.getenv("VERCEL") else ""
 )
 
 app.add_middleware(
