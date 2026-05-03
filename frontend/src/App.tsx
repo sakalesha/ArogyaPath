@@ -177,8 +177,8 @@ interface AvailablePathway {
 }
 
 // --- API Configuration ---
-// Unified Deployment: Backend is served under /api on the same domain
-const API_BASE = "/api";
+// Unified Deployment: Backend is served under /api on the same domain or via VITE_API_URL in production
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 const API_HEADERS = {
   "Content-Type": "application/json"
 };
