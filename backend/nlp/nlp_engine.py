@@ -11,10 +11,15 @@ import json
 import re
 import logging
 import joblib
-import torch
 from pathlib import Path
 from typing import Optional
-from sentence_transformers import SentenceTransformer, util
+
+try:
+    import torch
+    from sentence_transformers import SentenceTransformer, util
+    HAS_SEMANTIC = True
+except ImportError:
+    HAS_SEMANTIC = False
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +74,12 @@ class NLPEngine:
 
     def _load_semantic_model(self):
         """Load the SentenceTransformer model and the pre-computed index."""
+        if not HAS_SEMANTIC:
+            logger.warning("Torch/SentenceTransformers not installed. Running in lightweight classifier-only mode.")
+            self.model = None
+            self.condition_vectors = None
+            return
+
         try:
             self.model = SentenceTransformer('all-MiniLM-L6-v2')
             

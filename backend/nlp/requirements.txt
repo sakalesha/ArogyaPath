@@ -7,8 +7,6 @@ scikit-learn
 pandas
 joblib
 ipykernel
-sentence-transformers
-torch
 requests
 googlemaps
 sqlalchemy
