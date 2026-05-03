@@ -56,15 +56,19 @@ Our backend is built on a decoupled, high-performance microservices architecture
 
 ## 📸 Screenshots
 
-*(Add your screenshots to the `screenshots/` folder to display them here!)*
+*(Here is the application in action!)*
 
-| Symptom Analysis | Clinical Pathway |
-| :---: | :---: |
-| ![Symptom Analysis](screenshots/analysis.png) | ![Clinical Pathway](screenshots/pathway.png) |
+### Symptom Analysis
+![Symptom Analysis](screenshots/analysis.png)
 
-| Hospital Discovery | Cost Estimation |
-| :---: | :---: |
-| ![Hospital Discovery](screenshots/hospitals.png) | ![Cost Estimation](screenshots/cost.png) |
+### Clinical Pathway
+![Clinical Pathway](screenshots/pathway.png)
+
+### Hospital Discovery
+![Hospital Discovery](screenshots/hospitals.png)
+
+### Cost Estimation
+![Cost Estimation](screenshots/cost.png)
 
 ---
 
