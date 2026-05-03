@@ -13,7 +13,8 @@ import json
 import math
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict
+from maps_client import MapsClient
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,10 @@ class HospitalEngine:
 
     def __init__(self):
         self._load_data()
+        self.maps = MapsClient()
         logger.info(f"HospitalEngine loaded: {len(self.hospitals)} hospitals, {len(self.cities)} cities.")
+        if self.maps.is_active():
+            logger.info("M3 now using Global Discovery (Google Maps API).")
 
     def _load_data(self):
         with open(HOSPITALS_PATH, encoding="utf-8") as f:
@@ -61,7 +65,7 @@ class HospitalEngine:
 
     # ── Public API ─────────────────────────────────────────────────────────
 
-    def get_hospitals(
+    def rank_hospitals(
         self,
         pathway_id: str,
         city: str,
@@ -95,6 +99,22 @@ class HospitalEngine:
             if pathway_id in h.get("procedures", [])
         ]
 
+        # GLOBAL DISCOVERY: If Maps API is active, fetch live hospitals
+        is_live = False
+        if self.maps.is_active():
+            # Create a procedure-specific search term (e.g., "Knee Replacement" instead of just "hospital")
+            # We'll use a placeholder for now, but in a real app, you'd map pathway_id to a search term.
+            search_term = pathway_id.replace("pathway_", "").replace("_", " ") + " hospital"
+            live_results = self.maps.find_hospitals(city, query=search_term, coords=city_coords)
+            
+            if live_results:
+                is_live = True
+                logger.info(f"Found {len(live_results)} live hospitals via Global Discovery.")
+                # Results are already transformed by MapsClient
+                candidates = live_results
+                for c in candidates:
+                    c["city"] = city
+
         # Apply optional filters
         if filter_type:
             candidates = [h for h in candidates if h["type"] == filter_type]
@@ -105,6 +125,7 @@ class HospitalEngine:
             return {
                 "pathway_id": pathway_id,
                 "city": city,
+                "is_live": is_live,
                 "error": "No hospitals found for this condition + filters.",
                 "results": [],
             }
@@ -122,6 +143,7 @@ class HospitalEngine:
             "pathway_id": pathway_id,
             "city": city,
             "city_coordinates": city_coords,
+            "is_live": is_live,
             "total_found": len(candidates),
             "showing": len(top),
             "scoring_weights": WEIGHTS,
@@ -199,17 +221,17 @@ class HospitalEngine:
         ]
         return {
             "rank": rank,
-            "id": hospital["id"],
-            "name": hospital["name"],
-            "city": hospital["city"],
-            "state": hospital["state"],
-            "type": hospital["type"],
-            "type_label": hospital["type"].capitalize(),
-            "rating": hospital["rating"],
-            "review_count": hospital["review_count"],
-            "nabh_accredited": hospital["nabh_accredited"],
-            "cost_category": hospital["cost_category"],
-            "cost_multiplier": hospital["cost_multiplier"],
+            "id": hospital.get("id"),
+            "name": hospital.get("name"),
+            "city": hospital.get("city", ""),
+            "state": hospital.get("state", ""),
+            "type": hospital.get("type", "private"),
+            "type_label": hospital.get("type", "private").capitalize(),
+            "rating": hospital.get("rating", 3.0),
+            "review_count": hospital.get("review_count", 0),
+            "nabh_accredited": hospital.get("nabh_accredited", False),
+            "cost_category": hospital.get("cost_category", "medium"),
+            "cost_multiplier": hospital.get("cost_multiplier", 1.0),
             "distance_km": hospital["distance_km"],
             "icu_available": hospital["icu_available"],
             "emergency": hospital["emergency"],

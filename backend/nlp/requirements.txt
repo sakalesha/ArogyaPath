@@ -3,3 +3,12 @@ uvicorn[standard]==0.29.0
 pydantic==2.7.1
 python-dotenv==1.0.1
 mangum==0.17.0
+scikit-learn
+pandas
+joblib
+ipykernel
+sentence-transformers
+torch
+requests
+googlemaps
+sqlalchemy

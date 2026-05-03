@@ -1,0 +1,9 @@
+{
+  "Gastroesophageal reflux disease": "gerd",
+  "Peptic ulcer disease": "gerd",
+  "Hypertension ": "hypertension",
+  "Diabetes ": "type2_diabetes",
+  "Cervical spondylosis": "lower_back_pain",
+  "Arthritis": "tkr",
+  "Jaundice": "gallstones"
+}

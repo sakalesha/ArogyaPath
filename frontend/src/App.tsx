@@ -179,14 +179,13 @@ interface AvailablePathway {
 // --- API Configuration ---
 // Unified Deployment: Backend is served under /api on the same domain
 const API_BASE = "/api";
-const NGROK_HEADERS = {
-  "ngrok-skip-browser-warning": "true",
+const API_HEADERS = {
   "Content-Type": "application/json"
 };
 
-
 export default function App() {
-  const [view, setView] = useState<'input' | 'results' | 'pathway' | 'hospitals' | 'cost'>('input');
+  const [view, setView] = useState<'input' | 'results' | 'pathway' | 'hospitals' | 'cost' | 'how-it-works'>('input');
+  const [prevView, setPrevView] = useState<'input' | 'results' | 'pathway' | 'hospitals' | 'cost' | 'how-it-works'>('input');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -228,7 +227,7 @@ export default function App() {
       try {
         // Fetch Pathways (Optional)
         try {
-          const pathwayRes = await axios.get(`${API_BASE}/pathways`, { headers: NGROK_HEADERS });
+          const pathwayRes = await axios.get(`${API_BASE}/pathways`, { headers: API_HEADERS });
           if (Array.isArray(pathwayRes.data)) {
             setAvailablePathways(pathwayRes.data);
           }
@@ -238,7 +237,7 @@ export default function App() {
 
         // Fetch Cities (Optional)
         try {
-          const cityRes = await axios.get(`${API_BASE}/cities`, { headers: NGROK_HEADERS });
+          const cityRes = await axios.get(`${API_BASE}/cities`, { headers: API_HEADERS });
           if (cityRes.data?.cities && Array.isArray(cityRes.data.cities)) {
             setCities(cityRes.data.cities);
             setSelectedCity(cityRes.data.cities[0]);
@@ -268,7 +267,7 @@ export default function App() {
     try {
       const response = await axios.post(`${API_BASE}/analyze-query`, {
         query: query
-      }, { headers: NGROK_HEADERS });
+      }, { headers: API_HEADERS });
 
       setResult(response.data);
       setView('results');
@@ -287,7 +286,7 @@ export default function App() {
       const response = await axios.post(`${API_BASE}/get-pathway`, {
         pathway_id: pathwayId,
         severity: severity
-      }, { headers: NGROK_HEADERS });
+      }, { headers: API_HEADERS });
       setCurrentPathway(response.data);
       setSelectedSeverity(severity);
       setActivePathwayId(pathwayId);
@@ -328,7 +327,7 @@ export default function App() {
         top_n: 5,
         filter_type: (currentFilterType === 'All' || !currentFilterType) ? null : currentFilterType.toLowerCase(),
         filter_nabh: currentFilterNABH
-      }, { headers: NGROK_HEADERS });
+      }, { headers: API_HEADERS });
       
       const data: HospitalResponse = response.data;
       setHospitals(data.results);
@@ -360,7 +359,7 @@ export default function App() {
         city: selectedCity,
         hospital_type: targetType,
         has_insurance: targetInsurance
-      }, { headers: NGROK_HEADERS });
+      }, { headers: API_HEADERS });
 
       setCostEstimate(response.data);
       setView('cost');
@@ -454,10 +453,20 @@ export default function App() {
             </h1>
           </div>
           <div className="hidden md:flex items-center gap-6 text-sm text-slate-400 font-medium">
-            <span className="hover:text-brand-teal cursor-pointer transition-colors">How it works</span>
-            <span className="hover:text-brand-teal cursor-pointer transition-colors">Data Privacy</span>
-            <button className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white transition-all">
-              TenzorX 2026
+            <span 
+              onClick={() => {
+                setPrevView(view);
+                setView('how-it-works');
+              }}
+              className="hover:text-brand-teal cursor-pointer transition-colors"
+            >
+              How it works
+            </span>
+            <button 
+              onClick={handleReset}
+              className="px-5 py-2 rounded-xl bg-brand-teal text-brand-navy font-bold hover:bg-white transition-all shadow-[0_0_15px_-5px_rgba(14,165,233,0.4)]"
+            >
+              Clinical Portal
             </button>
           </div>
         </div>
@@ -552,6 +561,185 @@ export default function App() {
                     <span className="text-sm font-medium">{error}</span>
                   </motion.div>
                 )}
+              </motion.div>
+            ) : view === 'how-it-works' ? (
+              <motion.div
+                key="how-it-works-view"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="max-w-4xl mx-auto space-y-12"
+              >
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5">
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setView(prevView)}
+                      className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 transition-all"
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                      <h2 className="text-3xl font-bold text-white mb-1">How ArogyaPath Works</h2>
+                      <p className="text-sm text-slate-500 font-medium">Navigating the complexities of Indian healthcare through clinical AI.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hero Content */}
+                <div className="glass rounded-[2.5rem] p-8 md:p-12 bg-gradient-to-br from-brand-teal/10 via-transparent to-transparent border border-brand-teal/20 relative overflow-hidden">
+                  <div className="relative z-10">
+                    <p className="text-xl text-slate-300 leading-relaxed mb-8">
+                      ArogyaPath is an end-to-end healthcare navigation ecosystem designed to solve <span className="text-white font-bold">"Information Asymmetry"</span> in the patient journey. It transforms a user's natural language description of symptoms into a structured clinical plan, localized hospital recommendations, and transparent cost estimates.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-brand-teal/30 transition-all group">
+                        <div className="p-3 w-fit rounded-2xl bg-brand-teal/10 text-brand-teal mb-4 group-hover:scale-110 transition-transform">
+                          <Layout size={24} />
+                        </div>
+                        <h4 className="text-white font-bold mb-2">High-Level Architecture</h4>
+                        <p className="text-sm text-slate-400 leading-relaxed">
+                          Built using a Modular Microservice Architecture. The logic is strictly separated into specialized "Engines" handled asynchronously by a FastAPI Python server.
+                        </p>
+                      </div>
+                      <div className="p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-brand-teal/30 transition-all group">
+                        <div className="p-3 w-fit rounded-2xl bg-blue-500/10 text-blue-400 mb-4 group-hover:scale-110 transition-transform">
+                          <TrendingUp size={24} />
+                        </div>
+                        <h4 className="text-white font-bold mb-2">Technical Core</h4>
+                        <p className="text-sm text-slate-400 leading-relaxed">
+                          Utilizes Scikit-learn for rapid classification and Sentence-Transformers for deep semantic understanding of medical symptoms.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+                    <Stethoscope size={240} />
+                  </div>
+                </div>
+
+                {/* The Four Core Engines Section */}
+                <div className="space-y-10">
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold text-white mb-2 italic">The Four Core Engines (M1 – M4)</h3>
+                    <div className="h-1 w-20 bg-brand-teal mx-auto rounded-full"></div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {[
+                      {
+                        m: "M1",
+                        title: "NLP Symptom Mapping",
+                        icon: <Search className="text-emerald-400" size={24} />,
+                        desc: "Hybrid mapping using Scikit-learn and Sentence-Transformers (all-MiniLM-L6-v2) for deep semantic understanding and emergency detection.",
+                        color: "emerald"
+                      },
+                      {
+                        m: "M2",
+                        title: "Clinical Pathway Engine",
+                        icon: <Activity className="text-amber-400" size={24} />,
+                        desc: "Generates structured protocols via JSON Medical Ontology. Includes branching logic based on clinical severity (Mild, Moderate, Severe).",
+                        color: "amber"
+                      },
+                      {
+                        m: "M3",
+                        title: "Hospital Discovery & Ranking",
+                        icon: <LayoutGrid className="text-blue-400" size={24} />,
+                        desc: "Real-world hospital localization using Google Maps API. Ranked by a multi-factor algorithm (Rating, Distance, NABH, Specialty).",
+                        color: "blue"
+                      },
+                      {
+                        m: "M4",
+                        title: "Cost Estimation Engine",
+                        icon: <Coins className="text-rose-400" size={24} />,
+                        desc: "Transparent financial forecasting based on City Tier and Hospital Type, integrated with PM-JAY and standard insurance logic.",
+                        color: "rose"
+                      }
+                    ].map((engine, idx) => (
+                      <motion.div 
+                        key={idx}
+                        whileHover={{ y: -5 }}
+                        className="glass p-8 rounded-[2.5rem] relative overflow-hidden group border border-white/5"
+                      >
+                        <div className={`absolute top-0 right-0 px-6 py-2 bg-${engine.color}-500/20 text-${engine.color}-400 font-black italic rounded-bl-2xl text-lg`}>
+                          {engine.m}
+                        </div>
+                        <div className={`p-4 w-fit rounded-2xl bg-${engine.color}-500/10 mb-6 group-hover:scale-110 transition-transform`}>
+                          {engine.icon}
+                        </div>
+                        <h4 className="text-xl font-bold text-white mb-4">{engine.title}</h4>
+                        <p className="text-sm text-slate-400 leading-relaxed italic">{engine.desc}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tech Stack & User Flow */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-black uppercase tracking-widest text-brand-teal">Tech Stack</h3>
+                    <ul className="space-y-4">
+                      {[
+                        { label: "Backend", value: "Python (FastAPI)", icon: "🐍" },
+                        { label: "ML/NLP", value: "Scikit-Learn, Sentence-Transformers", icon: "🧠" },
+                        { label: "Frontend", value: "React + Framer Motion + Tailwind", icon: "⚛️" },
+                        { label: "Database", value: "SQLite + SQLAlchemy", icon: "💾" }
+                      ].map((tech, i) => (
+                        <li key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5">
+                          <span className="text-2xl">{tech.icon}</span>
+                          <div>
+                            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{tech.label}</p>
+                            <p className="text-sm font-bold text-white leading-tight">{tech.value}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-6">
+                    <h3 className="text-xl font-black uppercase tracking-widest text-brand-teal">User Flow</h3>
+                    <div className="space-y-4 relative">
+                      <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-white/5"></div>
+                      {[
+                        "Discovery: Description of symptoms in plain English.",
+                        "Analysis: AI-driven symptom extraction and emergency detection.",
+                        "Pathways: Structured medical protocols (Step 1 to N).",
+                        "Localize: Discovery of top-rated specialized hospitals.",
+                        "Estimate: Insurance-aware financial forecasting."
+                      ].map((step, i) => (
+                        <div key={i} className="relative flex items-center gap-6 pl-12 h-14">
+                          <div className="absolute left-4 w-4 h-4 rounded-full bg-brand-teal border-4 border-brand-navy z-10 shadow-[0_0_10px_rgba(14,165,233,0.5)]"></div>
+                          <p className="text-sm text-slate-300 font-medium">{step}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Section */}
+                <div className="p-8 md:p-12 rounded-[3rem] bg-brand-teal text-brand-navy">
+                  <div className="flex flex-col md:flex-row items-center gap-10">
+                    <div className="text-center md:text-left flex-1">
+                      <h3 className="text-3xl font-black italic mb-4 leading-tight">Hackathon Winning Potential</h3>
+                      <p className="text-brand-navy/80 font-medium mb-6">
+                        Deterministic safety prevents AI hallucinations by using structured medical ontologies. End-to-end utility solves the real-world navigation problems of the Indian healthcare system.
+                      </p>
+                      <button 
+                        onClick={() => setView('input')}
+                        className="px-8 py-4 rounded-2xl bg-brand-navy text-white font-bold hover:scale-105 transition-all shadow-xl"
+                      >
+                        Start Your Navigation
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 place-items-center opacity-50 grayscale group-hover:grayscale-0 transition-all">
+                      <Layout size={60} />
+                      <Activity size={60} />
+                      <Stethoscope size={60} />
+                      <Search size={60} />
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             ) : view === 'results' ? (
               <motion.div
@@ -1485,7 +1673,7 @@ export default function App() {
             <span className="text-xs font-semibold tracking-widest uppercase">Encryption Secured</span>
           </div>
           <p className="text-[10px] leading-relaxed text-slate-500 max-w-xl">
-            <strong>Disclaimer:</strong> ArogyaPath is a decision support tool powered by AI for the TenzorX 2026 Hackathon. It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health providers with any questions you may have regarding a medical condition. 
+            <strong>Disclaimer:</strong> ArogyaPath is an advanced decision support tool powered by medical-grade clinical AI. It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health providers with any questions you may have regarding a medical condition. 
           </p>
           <p className="text-[10px] text-slate-600 mt-2">© 2026 ArogyaPath Systems. Part of the National AI Health Initiative.</p>
         </div>
@@ -1493,5 +1681,3 @@ export default function App() {
     </div>
   );
 }
-
-

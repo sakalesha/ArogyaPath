@@ -1,218 +1,440 @@
 {
   "_meta": {
-    "version": "1.0",
-    "phase": 1,
-    "total_conditions": 10,
-    "description": "Controlled ontology for ArogyaPath M1 NLP → Condition Mapping. Phase 1 covers the 10 highest-priority conditions for Indian healthcare cost estimation.",
-    "scoring_note": "confidence = (matched_keywords / total_keywords) * weight, normalized across all conditions"
+    "version": "2.2",
+    "description": "Enriched ontology with ICD-11 IDs for WHO API integration"
   },
   "conditions": [
     {
       "id": "angina_cad",
       "name": "Angina / Coronary Artery Disease",
       "icd10": "I20",
-      "snomed": "194828000",
+      "icd11_id": "1435254666",
       "pathway_id": "pathway_angina",
-      "weight": 1.0,
       "symptom_keywords": [
-        "chest pain", "chest tightness", "chest pressure", "chest discomfort",
-        "exertion pain", "pain on walking", "pain on exercise", "cold weather pain",
-        "shortness of breath", "breathlessness", "radiating arm pain", "left arm pain",
-        "jaw pain", "neck pain", "palpitations", "angina", "heart pain",
-        "squeezing chest", "heavy chest"
+        "chest pain",
+        "pain in chest",
+        "chest hurting",
+        "tight chest",
+        "chest tightness",
+        "pressure in chest",
+        "heavy chest",
+        "heavy feeling in chest",
+        "chest discomfort",
+        "pain while walking",
+        "pain during exercise",
+        "pain on exertion",
+        "shortness of breath",
+        "breathlessness",
+        "difficulty breathing",
+        "left arm pain",
+        "pain in left arm",
+        "jaw pain",
+        "neck pain",
+        "heart pain",
+        "squeezing chest",
+        "palpitations"
       ],
       "procedure_keywords": [
-        "angioplasty", "pci", "bypass surgery", "cabg", "stent", "ecg",
-        "echocardiogram", "echo", "stress test", "angiography", "cath lab"
+        "angioplasty",
+        "stent",
+        "ecg",
+        "stress test"
       ],
-      "exclusion_keywords": ["heartburn", "acid", "after eating"],
-      "severity_keywords": ["severe", "crushing", "sudden", "radiating"]
+      "severity_keywords": {
+        "emergency": [
+          "crushing",
+          "radiating to jaw",
+          "sweating",
+          "sudden onset"
+        ],
+        "moderate": [
+          "worse on exertion",
+          "frequent",
+          "tightness"
+        ],
+        "mild": [
+          "occasional",
+          "stable",
+          "known case"
+        ]
+      },
+      "official_description": "This chapter includes certain conditions caused by pathogenic organisms or microorganisms, such as bacteria, viruses, parasites or fungi.",
+      "synonyms": [
+        "infection NOS",
+        "infection by unspecified organism and of unspecified site",
+        "infection process NOS",
+        "infection unknown",
+        "infectious disease NOS"
+      ],
+      "official_icd11_title": "Certain infectious or parasitic diseases"
     },
     {
       "id": "gerd",
       "name": "GERD / Acid Reflux",
       "icd10": "K21",
-      "snomed": "235595009",
+      "icd11_id": "1585806282",
       "pathway_id": "pathway_gerd",
-      "weight": 0.8,
       "symptom_keywords": [
-        "heartburn", "acid reflux", "regurgitation", "sour taste", "burning throat",
-        "burning chest", "after eating", "after meals", "lying down", "night pain",
-        "indigestion", "bloating", "belching", "nausea", "vomiting",
-        "difficulty swallowing", "sore throat", "cough at night"
+        "heartburn",
+        "acid reflux",
+        "burning chest",
+        "burning in chest",
+        "burning throat",
+        "sour taste",
+        "acid coming up",
+        "after eating pain",
+        "pain after meals",
+        "lying down pain",
+        "night chest burning",
+        "indigestion",
+        "bloating",
+        "belching"
       ],
       "procedure_keywords": [
-        "endoscopy", "upper gi", "ppi", "omeprazole", "pantoprazole"
+        "endoscopy",
+        "ppi",
+        "omeprazole"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["chronic", "persistent", "frequent"]
+      "severity_keywords": {
+        "emergency": [
+          "severe vomiting",
+          "difficulty swallowing",
+          "blood in vomit"
+        ],
+        "moderate": [
+          "persistent",
+          "daily",
+          "interrupts sleep"
+        ],
+        "mild": [
+          "occasional",
+          "after spicy food",
+          "rare"
+        ]
+      }
     },
     {
       "id": "tkr",
       "name": "Total Knee Replacement",
       "icd10": "Z96.65",
-      "snomed": "179344006",
+      "icd11_id": "1251399778",
       "pathway_id": "pathway_tkr",
-      "weight": 1.0,
       "symptom_keywords": [
-        "knee pain", "knee replacement", "knee surgery", "knee stiffness",
-        "knee swelling", "cannot walk", "difficulty walking", "limping",
-        "joint pain knee", "knee arthritis", "osteoarthritis knee",
-        "bent knee", "locking knee", "knee clicking", "knee giving way"
+        "knee pain",
+        "pain in knee",
+        "knee hurting",
+        "knee stiffness",
+        "knee swelling",
+        "difficulty walking",
+        "limping",
+        "joint pain knee",
+        "knee arthritis",
+        "knee clicking",
+        "knee locking"
       ],
       "procedure_keywords": [
-        "knee replacement", "tkr", "total knee", "knee implant",
-        "knee prosthesis", "knee arthroplasty", "physiotherapy"
+        "knee replacement",
+        "tkr",
+        "physiotherapy"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["severe", "bone on bone", "grade 4"]
+      "severity_keywords": {
+        "emergency": [
+          "cannot walk at all",
+          "severe deformity",
+          "bone on bone"
+        ],
+        "moderate": [
+          "difficulty with stairs",
+          "daily pain",
+          "stiff"
+        ],
+        "mild": [
+          "after long walk",
+          "morning stiffness",
+          "mild ache"
+        ]
+      }
     },
     {
       "id": "angioplasty_pci",
       "name": "Angioplasty / PCI",
       "icd10": "Z95.5",
-      "snomed": "11101003",
+      "icd11_id": "438499252",
       "pathway_id": "pathway_angioplasty",
-      "weight": 1.0,
       "symptom_keywords": [
-        "angioplasty", "stent", "blocked artery", "coronary blockage",
-        "heart blockage", "coronary artery disease",
-        "heart attack history", "cath"
+        "blocked artery",
+        "heart blockage",
+        "coronary blockage",
+        "stent needed",
+        "angioplasty required",
+        "heart attack history"
       ],
       "procedure_keywords": [
-        "angioplasty", "pci", "balloon angioplasty", "stent placement",
-        "angiography", "catheterization", "cath lab", "interventional cardiology"
+        "angioplasty",
+        "stent placement",
+        "angiography"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["90 percent", "critical", "emergency", "acute"]
+      "severity_keywords": {
+        "emergency": [
+          "critical blockage",
+          "acute attack",
+          "emergency stent"
+        ],
+        "moderate": [
+          "scheduled",
+          "90 percent blockage",
+          "planned pci"
+        ],
+        "mild": [
+          "checkup",
+          "stent follow up"
+        ]
+      }
     },
     {
       "id": "appendicitis",
       "name": "Appendicitis",
       "icd10": "K37",
-      "snomed": "74400008",
+      "icd11_id": "1280824982",
       "pathway_id": "pathway_appendicitis",
-      "weight": 0.9,
       "symptom_keywords": [
-        "appendix pain", "right side stomach pain", "lower right pain",
-        "stomach pain fever", "nausea vomiting fever", "appendicitis",
-        "belly button pain", "pain moving to right", "rebound tenderness",
-        "loss of appetite", "cannot eat", "vomiting pain"
+        "right side stomach pain",
+        "lower right pain",
+        "pain near belly button",
+        "pain moving to right",
+        "sharp stomach pain",
+        "severe stomach pain",
+        "nausea vomiting fever"
       ],
       "procedure_keywords": [
-        "appendectomy", "appendix removal", "laparoscopic appendectomy",
-        "open appendectomy", "ultrasound abdomen"
+        "appendectomy",
+        "ultrasound abdomen"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["severe", "sudden onset", "high fever", "emergency"]
+      "severity_keywords": {
+        "emergency": [
+          "high fever",
+          "rigid abdomen",
+          "rebound tenderness",
+          "severe sharp pain"
+        ],
+        "moderate": [
+          "constant pain",
+          "vomiting"
+        ],
+        "mild": [
+          "dull ache",
+          "early symptoms"
+        ]
+      }
     },
     {
       "id": "gallstones",
       "name": "Gallstones / Cholecystitis",
       "icd10": "K80",
-      "snomed": "235919008",
+      "icd11_id": "1431604163",
       "pathway_id": "pathway_gallstones",
-      "weight": 0.9,
       "symptom_keywords": [
-        "gallstone", "gallbladder pain", "upper right pain", "right side pain",
-        "pain after fatty food", "oily food pain", "nausea after eating",
-        "yellow eyes", "jaundice", "bile duct", "biliary colic",
-        "vomiting after meals", "bloating fat food"
+        "upper right pain",
+        "right side stomach pain",
+        "pain after fatty food",
+        "pain after oily food",
+        "nausea after eating",
+        "gallbladder pain",
+        "yellow eyes",
+        "jaundice"
       ],
       "procedure_keywords": [
-        "cholecystectomy", "gallbladder removal", "laparoscopic surgery",
-        "ercp", "ultrasound abdomen", "liver function test"
+        "cholecystectomy",
+        "ultrasound abdomen"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["acute", "severe", "fever with pain"]
+      "severity_keywords": {
+        "emergency": [
+          "jaundice",
+          "fever with chills",
+          "severe upper right pain"
+        ],
+        "moderate": [
+          "pain after meals",
+          "biliary colic"
+        ],
+        "mild": [
+          "discomfort",
+          "occasional bloating"
+        ]
+      }
     },
     {
       "id": "type2_diabetes",
       "name": "Type 2 Diabetes",
       "icd10": "E11",
-      "snomed": "44054006",
+      "icd11_id": "1456149160",
       "pathway_id": "pathway_diabetes",
-      "weight": 0.85,
       "symptom_keywords": [
-        "diabetes", "high blood sugar", "sugar level high", "diabetic",
-        "frequent urination", "excessive thirst", "weight loss unexplained",
-        "blurry vision", "slow healing", "tingling feet", "numbness feet",
-        "fatigue weakness", "frequent infections", "sugar patient"
+        "high blood sugar",
+        "diabetes",
+        "frequent urination",
+        "peeing often",
+        "excessive thirst",
+        "always thirsty",
+        "weight loss unexplained",
+        "blurry vision",
+        "tingling feet",
+        "numb feet",
+        "fatigue"
       ],
       "procedure_keywords": [
-        "hba1c", "fasting glucose", "blood sugar test", "insulin",
-        "metformin", "diabetes management", "endocrinologist"
+        "hba1c",
+        "blood sugar test",
+        "insulin"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["uncontrolled", "insulin dependent", "complications"]
+      "severity_keywords": {
+        "emergency": [
+          "unconscious",
+          "confused",
+          "extremely high sugar",
+          "ketoacidosis"
+        ],
+        "moderate": [
+          "blurry vision",
+          "numbness",
+          "uncontrolled"
+        ],
+        "mild": [
+          "newly diagnosed",
+          "diet controlled"
+        ]
+      }
     },
     {
       "id": "hypertension",
       "name": "Hypertension / High Blood Pressure",
       "icd10": "I10",
-      "snomed": "38341003",
+      "icd11_id": "1134267433",
       "pathway_id": "pathway_hypertension",
-      "weight": 0.85,
       "symptom_keywords": [
-        "high blood pressure", "hypertension", "bp high", "blood pressure",
-        "headache morning", "dizziness", "blurred vision headache",
-        "nosebleed", "shortness of breath exertion", "bp medication",
-        "pounding headache", "neck pain headache", "heart racing"
+        "high blood pressure",
+        "bp high",
+        "hypertension",
+        "morning headache",
+        "dizziness",
+        "blurred vision",
+        "nosebleed",
+        "pounding headache"
       ],
       "procedure_keywords": [
-        "bp monitoring", "ecg", "kidney function test", "urine test",
-        "amlodipine", "telmisartan", "antihypertensive"
+        "bp monitoring",
+        "ecg"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["uncontrolled", "stage 2", "hypertensive crisis", "very high bp"]
+      "severity_keywords": {
+        "emergency": [
+          "hypertensive crisis",
+          "severe headache",
+          "vision loss",
+          "very high bp"
+        ],
+        "moderate": [
+          "stage 2",
+          "daily high bp",
+          "dizzy"
+        ],
+        "mild": [
+          "borderline",
+          "prehypertension"
+        ]
+      }
     },
     {
       "id": "lower_back_pain",
       "name": "Lower Back Pain / Lumbar Disc Disease",
       "icd10": "M54.5",
-      "snomed": "279039007",
+      "icd11_id": "1496874052",
       "pathway_id": "pathway_lower_back",
-      "weight": 0.8,
       "symptom_keywords": [
-        "back pain", "lower back pain", "lumbar pain", "spine pain",
-        "disc problem", "herniated disc", "slipped disc", "sciatica",
-        "leg pain from back", "radiating leg pain", "cannot bend",
-        "stiffness morning back", "nerve pain leg", "lumbago"
+        "lower back pain",
+        "back pain",
+        "spine pain",
+        "slipped disc",
+        "herniated disc",
+        "sciatica",
+        "pain radiating to leg",
+        "leg pain from back",
+        "cannot bend",
+        "stiff back",
+        "nerve pain leg"
       ],
       "procedure_keywords": [
-        "mri spine", "physiotherapy", "discectomy", "laminectomy",
-        "spinal injection", "pain management", "orthopedic"
+        "mri spine",
+        "physiotherapy"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["severe", "cannot walk", "foot drop", "chronic"]
+      "severity_keywords": {
+        "emergency": [
+          "loss of bladder control",
+          "leg weakness",
+          "cannot move",
+          "paralysis"
+        ],
+        "moderate": [
+          "sciatica",
+          "constant pain",
+          "numbness"
+        ],
+        "mild": [
+          "morning stiffness",
+          "stiff back",
+          "mild ache"
+        ]
+      }
     },
     {
       "id": "cataract",
       "name": "Cataract Surgery",
       "icd10": "H26",
-      "snomed": "193570009",
+      "icd11_id": "1241144888",
       "pathway_id": "pathway_cataract",
-      "weight": 0.85,
       "symptom_keywords": [
-        "cataract", "blurry vision", "cloudy vision", "eye lens",
-        "difficulty seeing", "cannot read", "night vision poor",
-        "glare sensitivity", "double vision", "faded colors",
-        "eye surgery", "lens replacement", "vision loss gradual"
+        "blurry vision",
+        "cloudy vision",
+        "difficulty seeing",
+        "cannot see clearly",
+        "night vision poor",
+        "glare sensitivity",
+        "double vision",
+        "eye lens problem"
       ],
       "procedure_keywords": [
-        "phacoemulsification", "iol implant", "intraocular lens",
-        "cataract surgery", "ophthalmologist", "eye drops",
-        "slit lamp", "visual acuity test"
+        "cataract surgery",
+        "lens replacement"
       ],
-      "exclusion_keywords": [],
-      "severity_keywords": ["mature cataract", "dense", "cannot drive"]
+      "severity_keywords": {
+        "emergency": [
+          "sudden vision loss",
+          "severe pain",
+          "mature cataract"
+        ],
+        "moderate": [
+          "difficulty driving",
+          "cloudy vision"
+        ],
+        "mild": [
+          "gradual change",
+          "needs glasses"
+        ]
+      }
     }
   ],
   "emergency_keywords": [
-    "heart attack", "cardiac arrest", "stroke", "unconscious", "not breathing",
-    "cannot breathe", "stopped breathing", "collapsing", "fainting", "paralysis",
-    "face drooping", "arm weakness sudden", "speech slurred",
-    "crushing chest pain", "blood in stool heavy", "coughing blood", "seizure",
-    "convulsion", "anaphylaxis", "allergic reaction severe", "poisoning"
+    "heart attack",
+    "cardiac arrest",
+    "stroke",
+    "unconscious",
+    "not breathing",
+    "cannot breathe",
+    "collapsed",
+    "crushing chest pain",
+    "seizure",
+    "paralysis",
+    "face drooping",
+    "arm weakness",
+    "slurred speech"
   ]
 }

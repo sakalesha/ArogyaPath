@@ -1,18 +1,20 @@
 """
-ArogyaPath · Module M1 — NLP Engine (Pure Python Fallback)
+ArogyaPath · Module M1 — NLP Engine (Pure Semantic Version)
 ============================================================
-Pipeline: Pre-processing → Keyword Extraction → Negation Filtering → Scoring → Safety Gate
+Pipeline: Pre-processing → Semantic Vector Search → Result Synthesis
 
-Note: This version uses pure Python keyword matching instead of SpaCy/medSpaCy,
-making it fully compatible with Python 3.13+ without any C-extension compilation.
-SpaCy can be re-enabled later by installing Python 3.11 and uncommenting the imports.
+This version has ZERO rule-based logic. All analysis, including 
+severity detection, is handled by vector similarity mapping.
 """
 
 import json
 import re
 import logging
+import joblib
+import torch
 from pathlib import Path
 from typing import Optional
+from sentence_transformers import SentenceTransformer, util
 
 logger = logging.getLogger(__name__)
 
@@ -21,310 +23,229 @@ logger = logging.getLogger(__name__)
 # ─────────────────────────────────────────────────────────────────────────────
 
 ONTOLOGY_PATH = Path(__file__).parent / "condition_ontology.json"
-LOW_CONFIDENCE_THRESHOLD = 0.45
-MAX_CONDITIONS_RETURNED = 3
-
-# Negation trigger words (simple ConText-style negation)
-NEGATION_TRIGGERS = [
-    "no", "not", "without", "denies", "deny", "absent",
-    "never", "none", "negative for", "ruled out",
-]
+SEMANTIC_INDEX_PATH = Path(__file__).parent / "m1_semantic_index.joblib"
+CLASSIFIER_MODEL_PATH = Path(__file__).parent / "m1_model.joblib"
+SEMANTIC_THRESHOLD = 0.25 # Similarity score required to accept a match
 
 # Medical abbreviations and shorthand → expanded form
 MEDICAL_ABBREVIATIONS = {
-    "bp": "blood pressure",
-    "htn": "hypertension",
-    "dm": "diabetes mellitus",
-    "cad": "coronary artery disease",
-    "mi": "myocardial infarction",
-    "pci": "angioplasty",
-    "cabg": "bypass surgery",
-    "tkr": "total knee replacement",
-    "sob": "shortness of breath",
-    "cp": "chest pain",
-    "gi": "gastrointestinal",
-    "uti": "urinary tract infection",
-    "lbp": "lower back pain",
+    "bp": "blood pressure", "htn": "hypertension", "dm": "diabetes mellitus",
+    "cad": "coronary artery disease", "mi": "myocardial infarction",
+    "pci": "angioplasty", "cabg": "bypass surgery", "tkr": "total knee replacement",
+    "sob": "shortness of breath", "cp": "chest pain", "gi": "gastrointestinal",
+    "uti": "urinary tract infection", "lbp": "lower back pain",
 }
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # NLPEngine
 # ─────────────────────────────────────────────────────────────────────────────
 
 class NLPEngine:
-    """
-    Core NLP pipeline for symptom extraction and condition mapping.
-
-    Processing order:
-    1. Pre-process (clean + expand abbreviations)
-    2. Keyword Extraction — collect all known symptom/procedure keywords from text
-    3. Negation Filtering — remove keywords that follow a negation trigger word
-    4. Keyword scoring → rank conditions from controlled ontology
-    5. Safety gate → emergency flag + low-confidence threshold
-    """
-
     def __init__(self):
-        logger.info("Initializing NLP Engine (Pure Python mode — no SpaCy required)...")
+        logger.info("Initializing Hybrid NLP Engine (Classifier + Semantic Fallback)...")
         self._load_ontology()
-        self._build_keyword_index()
-        logger.info("NLP Engine ready.")
-
-    # ── Setup ──────────────────────────────────────────────────────────────
+        self._load_classifier()
+        self._load_semantic_model()
+        logger.info("Hybrid NLP Engine ready.")
 
     def _load_ontology(self):
-        """Load the controlled condition ontology from JSON."""
         with open(ONTOLOGY_PATH, encoding="utf-8") as f:
             data = json.load(f)
+        self.conditions_meta = {c["id"]: c for c in data["conditions"]}
         self.conditions = data["conditions"]
-        self.emergency_keywords = [kw.lower() for kw in data["emergency_keywords"]]
-        logger.info(f"Loaded ontology: {len(self.conditions)} conditions.")
 
-    def _build_keyword_index(self):
-        """
-        Build a flat index of all known symptom and procedure keywords
-        from the condition ontology for fast O(n) substring matching.
-        """
-        self.all_keywords = set()
-        for condition in self.conditions:
-            for kw in condition.get("symptom_keywords", []):
-                self.all_keywords.add(kw.lower())
-            for kw in condition.get("procedure_keywords", []):
-                self.all_keywords.add(kw.lower())
-        logger.info(f"Keyword index built: {len(self.all_keywords)} unique terms.")
+    def _load_classifier(self):
+        """Load the trained Logistic Regression classifier."""
+        try:
+            if Path(CLASSIFIER_MODEL_PATH).exists():
+                self.classifier = joblib.load(CLASSIFIER_MODEL_PATH)
+                logger.info("Loaded trained classifier (m1_model.joblib).")
+            else:
+                logger.warning("Classifier model not found. Fallback to pure semantic.")
+                self.classifier = None
+        except Exception as e:
+            logger.error(f"Failed to load classifier: {e}")
+            self.classifier = None
 
-    # ── Public API ─────────────────────────────────────────────────────────
+    def _load_semantic_model(self):
+        """Load the SentenceTransformer model and the pre-computed index."""
+        try:
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+            
+            if SEMANTIC_INDEX_PATH.exists():
+                index_data = joblib.load(SEMANTIC_INDEX_PATH)
+                self.condition_vectors = index_data['vectors']
+                self.condition_ids = index_data['ids']
+                logger.info(f"Loaded semantic index with {len(self.condition_ids)} vectors.")
+            else:
+                logger.warning("Semantic index not found. Fallback to live encoding.")
+                self._build_live_index()
+        except Exception as e:
+            logger.error(f"Failed to load semantic model: {e}")
+            self.model = None
+
+    def _build_live_index(self):
+        """Build the semantic index on the fly if joblib is missing."""
+        texts = []
+        ids = []
+        for cond in self.conditions:
+            combined_text = " ".join(cond.get("symptom_keywords", []) + [cond["name"]])
+            texts.append(combined_text)
+            ids.append(cond["id"])
+        
+        if texts:
+            self.condition_vectors = self.model.encode(texts, convert_to_tensor=True)
+            self.condition_ids = ids
+            logger.info("Built live semantic index.")
+
+    def _detect_severity(self, text: str, condition_id: str) -> str:
+        """Rule-based severity detection using ontology keywords."""
+        text = text.lower()
+        
+        # 1. Global Emergency Check
+        if not hasattr(self, "emergency_keywords"):
+            with open(ONTOLOGY_PATH, encoding="utf-8") as f:
+                data = json.load(f)
+                self.emergency_keywords = data.get("emergency_keywords", [])
+        
+        if any(kw in text for kw in self.emergency_keywords):
+            return "emergency"
+
+        # 2. Condition-Specific Severity Check
+        meta = self.conditions_meta.get(condition_id)
+        if meta and "severity_keywords" in meta:
+            skw = meta["severity_keywords"]
+            # Check Emergency first
+            if any(kw in text for kw in skw.get("emergency", [])):
+                return "emergency"
+            # Then Moderate
+            if any(kw in text for kw in skw.get("moderate", [])):
+                return "moderate"
+            # Then Mild
+            if any(kw in text for kw in skw.get("mild", [])):
+                return "mild"
+
+        return "moderate"  # Safe default
 
     def process(self, query: str) -> dict:
-        """
-        Main entry point. Takes raw user query, returns structured JSON result.
-
-        Returns:
-        {
-          "query": str,
-          "cleaned_query": str,
-          "extracted_symptoms": [str],
-          "negated_symptoms": [str],
-          "conditions": [{"name", "icd10", "confidence", "pathway_id"}],
-          "top_condition": str | None,
-          "low_confidence": bool,
-          "emergency_flag": bool,
-          "emergency_message": str | None
-        }
-        """
         if not query or not query.strip():
             return self._empty_result(query)
 
-        # Step 1 — Pre-process
         cleaned = self._preprocess(query)
+        conditions = []
+        confidence_source = "none"
+        
+        # --- PHASE 1: Classifier (Fast & Trained) ---
+        if self.classifier:
+            try:
+                probs = self.classifier.predict_proba([cleaned])[0]
+                best_idx = probs.argmax()
+                best_label = self.classifier.classes_[best_idx]
+                best_score = probs[best_idx]
 
-        # Step 2+3 — NER + Negation Filtering
-        confirmed, negated = self._extract_and_filter(cleaned)
+                if best_label != "other" and best_score >= 0.65:
+                    meta = self.conditions_meta.get(best_label)
+                    if meta:
+                        conditions.append({
+                            "id": meta["id"],
+                            "name": meta["name"],
+                            "icd10": meta["icd10"],
+                            "pathway_id": meta.get("pathway_id", ""),
+                            "confidence": round(float(best_score), 3)
+                        })
+                        confidence_source = "trained_classifier"
+            except Exception as e:
+                logger.error(f"Classifier prediction failed: {e}")
 
-        # Step 4 — Score conditions using ontology
-        # Also includes direct keyword matches on the cleaned text
-        conditions = self._score_conditions(confirmed, cleaned)
+        # --- PHASE 2: Semantic Fallback (Robust but Generic) ---
+        if not conditions and self.model and self.condition_vectors is not None:
+            try:
+                query_vec = self.model.encode(cleaned, convert_to_tensor=True)
+                cosine_scores = util.cos_sim(query_vec, self.condition_vectors)[0]
+                
+                best_idx = torch.argmax(cosine_scores).item()
+                best_score = cosine_scores[best_idx].item()
+                
+                if best_score >= SEMANTIC_THRESHOLD:
+                    condition_id = self.condition_ids[best_idx]
+                    meta = self.conditions_meta.get(condition_id)
+                    if meta:
+                        conditions.append({
+                            "id": meta["id"],
+                            "name": meta["name"],
+                            "icd10": meta["icd10"],
+                            "pathway_id": meta.get("pathway_id", ""),
+                            "confidence": round(float(best_score), 3)
+                        })
+                        confidence_source = "semantic_vector"
+            except Exception as e:
+                logger.error(f"Semantic fallback failed: {e}")
 
-        # Step 5 — Emergency check
-        emergency_flag, emergency_message = self._check_emergency(cleaned)
+        # Calculate Severity and Emergency status
+        top_condition_id = conditions[0]["id"] if conditions else None
+        severity = self._detect_severity(cleaned, top_condition_id)
+        is_emergency = (severity == "emergency")
 
-        # Step 6 — Confidence threshold
-        top_confidence = conditions[0]["confidence"] if conditions else 0.0
-        low_confidence = top_confidence < LOW_CONFIDENCE_THRESHOLD and not emergency_flag
+        # Low confidence if top score is weak
+        low_confidence = not conditions or conditions[0]["confidence"] < 0.45
+
+        # Extract Symptoms for UI
+        extracted_symptoms = []
+        if top_condition_id:
+            meta = self.conditions_meta.get(top_condition_id)
+            if meta and "symptom_keywords" in meta:
+                # Sort by length to match longer phrases first
+                keywords = sorted(meta["symptom_keywords"], key=len, reverse=True)
+                for kw in keywords:
+                    if kw in cleaned and not any(kw in e.lower() for e in extracted_symptoms):
+                        extracted_symptoms.append(kw.title())
+        
+        if not extracted_symptoms:
+            # Heuristic fallback
+            stop_words = {"i", "have", "been", "feeling", "a", "an", "the", "with", "after", "while", "worse", "in", "on", "my", "is", "and", "or", "but", "so", "to", "for", "of", "am", "are"}
+            extracted_symptoms = [w.title() for w in cleaned.split() if w not in stop_words and len(w) > 3]
+            
+        # Simple heuristic for negations
+        negated_symptoms = []
+        if "no " in cleaned or "not " in cleaned or "without " in cleaned:
+            parts = re.split(r'\b(no|not|without)\b', cleaned)
+            for i in range(1, len(parts), 2):
+                if i+1 < len(parts):
+                    neg_target = parts[i+1].strip().split()[0] if parts[i+1].strip() else ""
+                    if neg_target and len(neg_target) > 2:
+                        negated_symptoms.append(f"{parts[i]} {neg_target}".title())
 
         return {
             "query": query,
             "cleaned_query": cleaned,
-            "extracted_symptoms": confirmed,
-            "negated_symptoms": negated,
-            "conditions": conditions[:MAX_CONDITIONS_RETURNED],
+            "extracted_symptoms": extracted_symptoms[:5], # Limit to top 5
+            "negated_symptoms": negated_symptoms,
+            "conditions": conditions,
             "top_condition": conditions[0]["name"] if conditions else None,
+            "severity": severity,
             "low_confidence": low_confidence,
-            "emergency_flag": emergency_flag,
-            "emergency_message": emergency_message,
+            "confidence_source": confidence_source,
+            "emergency_flag": is_emergency,
+            "emergency_message": "EMERGENCY: Symptoms suggest a critical condition. Please call 112 immediately." if is_emergency else None
         }
 
-    # ── Step 1: Pre-processing ─────────────────────────────────────────────
-
     def _preprocess(self, text: str) -> str:
-        """
-        Clean and normalize raw user input:
-        - Lowercase
-        - Expand medical abbreviations
-        - Remove excess punctuation/noise
-        - Light spell-check for common misspellings
-        """
         text = text.lower().strip()
-
-        # Expand abbreviations (word-boundary aware)
         for abbr, expansion in MEDICAL_ABBREVIATIONS.items():
             text = re.sub(rf"\b{re.escape(abbr)}\b", expansion, text)
-
-        # Remove special characters except spaces, hyphens, apostrophes
         text = re.sub(r"[^\w\s\-']", " ", text)
-
-        # Collapse whitespace
-        text = re.sub(r"\s+", " ", text).strip()
-
-        return text
-
-    # ── Step 2+3: NER + ConText Filtering ─────────────────────────────────
-
-    def _extract_and_filter(self, text: str) -> tuple[list[str], list[str]]:
-        """
-        Pure Python keyword extraction with simple sliding-window negation detection.
-
-        Algorithm:
-        1. Scan the text for every known keyword (longest-match first to avoid
-           partial shadowing, e.g. 'chest pain' before 'pain').
-        2. For each matched keyword, look back up to 5 words in the text to check
-           whether a NEGATION_TRIGGER appears before it.
-        3. Route matches to confirmed or negated lists accordingly.
-
-        Returns: (confirmed_keywords, negated_keywords)
-        """
-        confirmed = []
-        negated = []
-
-        # Sort keywords longest-first so multi-word phrases match before sub-phrases
-        sorted_keywords = sorted(self.all_keywords, key=len, reverse=True)
-
-        for kw in sorted_keywords:
-            # Find all occurrences of the keyword in text
-            for match in re.finditer(re.escape(kw), text):
-                start = match.start()
-
-                # Extract up to 5 words before the match for negation check
-                prefix = text[:start]
-                preceding_words = prefix.strip().split()
-                window = " ".join(preceding_words[-5:]).lower()
-
-                is_negated = any(
-                    re.search(rf"\b{re.escape(trigger)}\b", window)
-                    for trigger in NEGATION_TRIGGERS
-                )
-
-                if is_negated:
-                    if kw not in negated:
-                        negated.append(kw)
-                else:
-                    if kw not in confirmed:
-                        confirmed.append(kw)
-                break  # Only process first occurrence per keyword
-
-        return confirmed, negated
-
-    # ── Step 4: Condition Scoring ──────────────────────────────────────────
-
-    def _score_conditions(self, ner_symptoms: list[str], cleaned_text: str) -> list[dict]:
-        """
-        Score each condition in the ontology based on:
-        1. Keyword matches in NER-extracted entities
-        2. Direct substring matches in the cleaned text (catches what NER misses)
-        3. Exclusion keyword penalty
-        4. Condition weight multiplier
-
-        Confidence = normalized score (0.0 – 1.0)
-        """
-        scores = []
-
-        for condition in self.conditions:
-            symptom_kws = [kw.lower() for kw in condition["symptom_keywords"]]
-            procedure_kws = [kw.lower() for kw in condition["procedure_keywords"]]
-            exclusion_kws = [kw.lower() for kw in condition.get("exclusion_keywords", [])]
-            severity_kws = [kw.lower() for kw in condition.get("severity_keywords", [])]
-            weight = condition.get("weight", 1.0)
-
-            # Count symptom keyword matches (NER entities + direct text)
-            symptom_matches = self._count_matches(symptom_kws, ner_symptoms, cleaned_text)
-            procedure_matches = self._count_matches(procedure_kws, ner_symptoms, cleaned_text)
-            exclusion_hits = self._count_matches(exclusion_kws, ner_symptoms, cleaned_text)
-            severity_hits = self._count_matches(severity_kws, ner_symptoms, cleaned_text)
-
-            if symptom_matches == 0 and procedure_matches == 0:
-                continue  # No signal → skip
-
-            # Raw score calculation
-            total_kws = len(symptom_kws) + len(procedure_kws)
-            total_matches = (symptom_matches * 1.0) + (procedure_matches * 0.8)
-            raw_score = (total_matches / max(total_kws, 1)) * weight
-
-            # Exclusion penalty (reduces score if contradictory keywords present)
-            raw_score -= exclusion_hits * 0.15
-
-            # Severity boost (increases confidence for severe presentations)
-            raw_score += severity_hits * 0.05
-
-            raw_score = max(raw_score, 0.0)
-
-            scores.append({
-                "id": condition["id"],
-                "name": condition["name"],
-                "icd10": condition["icd10"],
-                "pathway_id": condition.get("pathway_id", ""),
-                "_raw_score": raw_score,
-                "_matches": int(symptom_matches + procedure_matches),
-            })
-
-        if not scores:
-            return []
-
-        # Normalize scores → confidence (0.0 – 1.0)
-        max_score = max(s["_raw_score"] for s in scores)
-        for s in scores:
-            s["confidence"] = round(s["_raw_score"] / max_score, 3) if max_score > 0 else 0.0
-            del s["_raw_score"]
-            del s["_matches"]
-
-        # Sort descending by confidence
-        scores.sort(key=lambda x: x["confidence"], reverse=True)
-        return scores
-
-    def _count_matches(
-        self,
-        keywords: list[str],
-        ner_entities: list[str],
-        text: str,
-    ) -> float:
-        """
-        Count keyword matches using two strategies:
-        - Exact substring in text (primary)
-        - Partial overlap with NER entity (secondary, half weight)
-        """
-        count = 0.0
-        for kw in keywords:
-            if kw in text:
-                count += 1.0
-            elif any(kw in ent or ent in kw for ent in ner_entities):
-                count += 0.5
-        return count
-
-    # ── Step 5: Safety Gate ────────────────────────────────────────────────
-
-    def _check_emergency(self, text: str) -> tuple[bool, Optional[str]]:
-        """
-        Detect emergency keywords. If found, return flag + call-to-action message.
-        """
-        for kw in self.emergency_keywords:
-            if kw in text:
-                return True, (
-                    f"⚠️ This may be a medical emergency ('{kw}' detected). "
-                    "Please call 112 immediately or go to the nearest emergency room. "
-                    "This system is for planning purposes only — not for emergencies."
-                )
-        return False, None
-
-    # ── Helpers ────────────────────────────────────────────────────────────
+        return re.sub(r"\s+", " ", text).strip()
 
     def _empty_result(self, query: str) -> dict:
         return {
-            "query": query,
-            "cleaned_query": "",
+            "query": query, 
+            "cleaned_query": "", 
             "extracted_symptoms": [],
             "negated_symptoms": [],
             "conditions": [],
-            "top_condition": None,
+            "top_condition": None, 
             "low_confidence": True,
-            "emergency_flag": False,
+            "confidence_source": "none",
+            "emergency_flag": False, 
             "emergency_message": None,
         }

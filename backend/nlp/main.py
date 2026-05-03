@@ -20,6 +20,10 @@ from nlp_engine import NLPEngine
 from pathway_engine import PathwayEngine
 from hospital_engine import HospitalEngine
 from cost_engine import CostEngine
+from database import SessionLocal, get_db
+from models import UserReportedCost
+from sqlalchemy.orm import Session
+from fastapi import Depends
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Logging
@@ -115,6 +119,7 @@ class AnalyzeResponse(BaseModel):
     negated_symptoms: list[str]
     conditions: list[ConditionResult]
     top_condition: Optional[str]
+    severity: str
     low_confidence: bool
     emergency_flag: bool
     emergency_message: Optional[str]
@@ -316,6 +321,13 @@ class CostRequest(BaseModel):
     hospital_type: str = Field("private", example="private", description="'government' | 'trust' | 'private' | 'corporate'")
     has_insurance: bool = Field(False, description="Whether patient has PM-JAY or insurance coverage.")
 
+class ReportCostRequest(BaseModel):
+    pathway_id: str
+    city: str
+    hospital_name: str
+    actual_cost_paid: float
+    user_rating: Optional[int] = None
+
 
 @app.post(
     "/estimate-cost",
@@ -349,3 +361,24 @@ async def list_cost_pathways():
     """Returns all pathway IDs for which cost data is available."""
     current_cost_engine = _get_cost_engine()
     return {"supported_pathways": current_cost_engine.list_supported_pathways()}
+
+@app.post("/report-cost", tags=["Cost"], summary="Crowdsource actual treatment cost")
+async def report_cost(request: ReportCostRequest, db: Session = Depends(get_db)):
+    """
+    **Level 3: Crowdsourcing.**
+    Allows users to report what they actually paid to help others.
+    """
+    try:
+        new_report = UserReportedCost(
+            pathway_id=request.pathway_id,
+            city=request.city,
+            hospital_name=request.hospital_name,
+            actual_cost_paid=request.actual_cost_paid,
+            user_rating_of_experience=request.user_rating
+        )
+        db.add(new_report)
+        db.commit()
+        return {"status": "success", "message": "Thank you for contributing to the community pricing index!"}
+    except Exception as e:
+        logger.error(f"Error reporting cost: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save report.")
