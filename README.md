@@ -1,7 +1,7 @@
 # ArogyaPath: Decision Intelligence for Indian Healthcare 🏥
 **Intelligent Symptom-to-Pathway Mapping & Hospital Discovery**
 
-![ArogyaPath Banner](Docs/screenshots/banner.png)
+![ArogyaPath Banner](screenshots/banner.png)
 
 *Developed for the TenzorX 2026 National AI Hackathon*
 
@@ -56,15 +56,15 @@ Our backend is built on a decoupled, high-performance microservices architecture
 
 ## 📸 Screenshots
 
-*(Add your screenshots to the `Docs/screenshots/` folder to display them here!)*
+*(Add your screenshots to the `screenshots/` folder to display them here!)*
 
 | Symptom Analysis | Clinical Pathway |
 | :---: | :---: |
-| ![Symptom Analysis](Docs/screenshots/analysis.png) | ![Clinical Pathway](Docs/screenshots/pathway.png) |
+| ![Symptom Analysis](screenshots/analysis.png) | ![Clinical Pathway](screenshots/pathway.png) |
 
 | Hospital Discovery | Cost Estimation |
 | :---: | :---: |
-| ![Hospital Discovery](Docs/screenshots/hospitals.png) | ![Cost Estimation](Docs/screenshots/cost.png) |
+| ![Hospital Discovery](screenshots/hospitals.png) | ![Cost Estimation](screenshots/cost.png) |
 
 ---
 
