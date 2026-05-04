@@ -10,3 +10,4 @@ ipykernel
 requests
 googlemaps
 sqlalchemy
+spacy
