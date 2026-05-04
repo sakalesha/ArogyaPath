@@ -154,7 +154,8 @@ class NLPEngine:
                 best_label = self.classifier.classes_[best_idx]
                 best_score = probs[best_idx]
 
-                if best_label != "other" and best_score >= 0.65:
+                # Lowered threshold since we disabled Semantic Fallback for Render Free Tier
+                if best_label != "other" and best_score >= 0.20:
                     meta = self.conditions_meta.get(best_label)
                     if meta:
                         conditions.append({
