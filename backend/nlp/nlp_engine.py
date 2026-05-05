@@ -11,10 +11,14 @@ import json
 import re
 import logging
 import joblib
-import torch
 from pathlib import Path
 from typing import Optional
-from sentence_transformers import SentenceTransformer, util
+
+try:
+    import spacy
+    HAS_SEMANTIC = True
+except ImportError:
+    HAS_SEMANTIC = False
 
 logger = logging.getLogger(__name__)
 
@@ -68,35 +72,32 @@ class NLPEngine:
             self.classifier = None
 
     def _load_semantic_model(self):
-        """Load the SentenceTransformer model and the pre-computed index."""
+        """Load the SpaCy model and build the live semantic index."""
+        if not HAS_SEMANTIC:
+            logger.warning("SpaCy not installed. Running in lightweight classifier-only mode.")
+            self.nlp = None
+            self.condition_docs = None
+            return
+
         try:
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
-            
-            if SEMANTIC_INDEX_PATH.exists():
-                index_data = joblib.load(SEMANTIC_INDEX_PATH)
-                self.condition_vectors = index_data['vectors']
-                self.condition_ids = index_data['ids']
-                logger.info(f"Loaded semantic index with {len(self.condition_ids)} vectors.")
-            else:
-                logger.warning("Semantic index not found. Fallback to live encoding.")
-                self._build_live_index()
+            self.nlp = spacy.load("en_core_web_md")
+            logger.info("Loaded SpaCy en_core_web_md model.")
+            self._build_live_index()
         except Exception as e:
-            logger.error(f"Failed to load semantic model: {e}")
-            self.model = None
+            logger.error(f"Failed to load SpaCy model: {e}")
+            self.nlp = None
 
     def _build_live_index(self):
-        """Build the semantic index on the fly if joblib is missing."""
-        texts = []
-        ids = []
+        """Build the semantic index on the fly using SpaCy."""
+        self.condition_docs = []
+        self.condition_ids = []
         for cond in self.conditions:
-            combined_text = " ".join(cond.get("symptom_keywords", []) + [cond["name"]])
-            texts.append(combined_text)
-            ids.append(cond["id"])
+            texts = cond.get("symptom_keywords", []) + [cond["name"]]
+            docs = [self.nlp(text) for text in texts]
+            self.condition_docs.append(docs)
+            self.condition_ids.append(cond["id"])
         
-        if texts:
-            self.condition_vectors = self.model.encode(texts, convert_to_tensor=True)
-            self.condition_ids = ids
-            logger.info("Built live semantic index.")
+        logger.info("Built live semantic index with SpaCy (max-keyword scoring).")
 
     def _detect_severity(self, text: str, condition_id: str) -> str:
         """Rule-based severity detection using ontology keywords."""
@@ -143,7 +144,8 @@ class NLPEngine:
                 best_label = self.classifier.classes_[best_idx]
                 best_score = probs[best_idx]
 
-                if best_label != "other" and best_score >= 0.65:
+                # Lowered threshold since we disabled Semantic Fallback for Render Free Tier
+                if best_label != "other" and best_score >= 0.20:
                     meta = self.conditions_meta.get(best_label)
                     if meta:
                         conditions.append({
@@ -157,27 +159,33 @@ class NLPEngine:
             except Exception as e:
                 logger.error(f"Classifier prediction failed: {e}")
 
-        # --- PHASE 2: Semantic Fallback (Robust but Generic) ---
-        if not conditions and self.model and self.condition_vectors is not None:
+        # --- PHASE 2: Semantic Fallback (SpaCy Word Vectors) ---
+        if not conditions and self.nlp and self.condition_docs:
             try:
-                query_vec = self.model.encode(cleaned, convert_to_tensor=True)
-                cosine_scores = util.cos_sim(query_vec, self.condition_vectors)[0]
+                query_doc = self.nlp(cleaned)
                 
-                best_idx = torch.argmax(cosine_scores).item()
-                best_score = cosine_scores[best_idx].item()
-                
-                if best_score >= SEMANTIC_THRESHOLD:
-                    condition_id = self.condition_ids[best_idx]
-                    meta = self.conditions_meta.get(condition_id)
-                    if meta:
-                        conditions.append({
-                            "id": meta["id"],
-                            "name": meta["name"],
-                            "icd10": meta["icd10"],
-                            "pathway_id": meta.get("pathway_id", ""),
-                            "confidence": round(float(best_score), 3)
-                        })
-                        confidence_source = "semantic_vector"
+                # Check if query has word vectors (e.g., if it's completely out of vocabulary)
+                if query_doc.has_vector:
+                    scores = []
+                    for docs in self.condition_docs:
+                        valid_scores = [query_doc.similarity(doc) for doc in docs if doc.has_vector]
+                        scores.append(max(valid_scores) if valid_scores else 0)
+                    
+                    best_score = max(scores)
+                    best_idx = scores.index(best_score)
+                    
+                    if best_score >= SEMANTIC_THRESHOLD:
+                        condition_id = self.condition_ids[best_idx]
+                        meta = self.conditions_meta.get(condition_id)
+                        if meta:
+                            conditions.append({
+                                "id": meta["id"],
+                                "name": meta["name"],
+                                "icd10": meta["icd10"],
+                                "pathway_id": meta.get("pathway_id", ""),
+                                "confidence": round(float(best_score), 3)
+                            })
+                            confidence_source = "spacy_semantic_vector"
             except Exception as e:
                 logger.error(f"Semantic fallback failed: {e}")
 
